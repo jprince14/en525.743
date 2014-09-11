@@ -8,7 +8,7 @@ void foo()
 
 void bar(int x)
 {
-  // do stuff...
+  // do stuff...123
 }
 
 int main()
