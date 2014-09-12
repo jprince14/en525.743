@@ -1,6 +1,8 @@
 #include <iostream>       // std::cout
 #include <thread>         // std::thread
 #include <vector>
+#include <stdio.h>
+
 void foo()
 {
   // do stuff...
@@ -15,7 +17,7 @@ int main()
 {
 	  std::vector<int> myints;
 
-	  printf("test");
+	  printf("test123");
 
   return 0;
 }
