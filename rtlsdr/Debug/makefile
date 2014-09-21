@@ -8,7 +8,12 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include src/getopt/subdir.mk
+-include src/convenience/subdir.mk
 -include src/subdir.mk
+-include rtl-sdr/src/getopt/subdir.mk
+-include rtl-sdr/src/convenience/subdir.mk
+-include rtl-sdr/src/subdir.mk
 -include subdir.mk
 -include objects.mk
 
