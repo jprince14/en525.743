@@ -1,1 +1,0 @@
-gcc -v -lm -lpthread -lusb-1.0 *.c *.h -o test
