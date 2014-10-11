@@ -15,18 +15,18 @@
 #include <string>
 #include <unistd.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <signal.h>
-#include <time.h>
-#include <cstdlib>
+//#include <sys/types.h>
+//#include <sys/socket.h>
+//#include <netinet/in.h>
+//#include <arpa/inet.h>
+//#include <netdb.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <unistd.h>
+//#include <string.h>
+//#include <signal.h>
+//#include <time.h>
+//#include <cstdlib>
 
 using namespace std;
 
@@ -47,10 +47,9 @@ int main(int argc, char**argv) {
 
 	connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
-	int test = 0x0123;
+//	int test = 0x0123;
 
-//   std::string test = "this is a test";
-	strcpy(sendline, "this is a test");
+	strcpy(sendline, "Particia 2 Morrow");
 	unsigned int x;
 	for (x = 0; x < sizeof(sendline); x++) {
 		if (sendline[x] == '\0') {
@@ -58,25 +57,11 @@ int main(int argc, char**argv) {
 		}
 	}
 //http://stackoverflow.com/questions/11702673/send-hex-values-through-udp-socket
-	send(sockfd, sendline, x * sizeof(char), 0);
 
-	   std::string test2 = std::to_string(x);
+	send(sockfd, (char*)&number, sizeof(number), 0);
 
-//	   nc -l 127.0.0.1 1234 -v -k
+	//	send(sockfd, sendline, x * sizeof(char), 0);
 
-	   //
-
-
-	/* while (fgets(sendline, 10000,stdin) != NULL)
-	 {
-
-
-	 sendto(sockfd,sendline,strlen(sendline),0,
-	 (struct sockaddr *)&servaddr,sizeof(clientaddr.c_str()));
-	 n=recvfrom(sockfd,recvline,10000,0,NULL,NULL);
-	 recvline[n]=0;
-	 fputs(recvline,stdout);
-	 }*/
 
 	sleep(10);
 	printf("program exiting\n");
