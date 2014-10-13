@@ -10,6 +10,9 @@
 
 using namespace std;
 
+
+
+
 int main(int argc, char**argv) {
 
 	printf("test");
@@ -20,7 +23,11 @@ rtlsocket->assignport(1234);
 rtlsocket->createsocket();
 rtlsocket->opensocket();
 
-uint32_t command = 99100000;
+uint32_t command = 0x02001234;
+
+
+
+
 
 
 rtlsocket->senduint32(command);
