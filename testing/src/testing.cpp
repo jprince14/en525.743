@@ -9,6 +9,19 @@
 
 using namespace std;
 
+int tune(int socket, uint32_t freq){
+
+	send(socket, (char*)&freq, sizeof(freq), 0);
+
+
+
+
+return 0;
+}
+
+
+
+
 int main(int argc, char**argv) {
 	int sockfd, n;
 	struct sockaddr_in servaddr;
@@ -26,12 +39,13 @@ int main(int argc, char**argv) {
 
 	connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
-	int number = 0x123456;
+	uint32_t frequency = 10000; //in Hz
 
-	int sendsize;
-	sendsize = snprintf(sendline, sizeof(sendline), "%x", number);
 
-//	send(sockfd, sendline, sendsize * sizeof(char), 0);
-	send(sockfd, (char*)&number, sizeof(number), 0);
+	tune(sockfd, frequency);
+
+//	int sendsize;
+//	sendsize = snprintf(sendline, sizeof(sendline), "%x", number);
+
 
 }
