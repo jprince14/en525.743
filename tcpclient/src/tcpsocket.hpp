@@ -21,10 +21,10 @@
 
 namespace std {
 
-struct commandformat {
-	int command;
-	uint32_t parameter;
-};
+struct command {
+	unsigned char cmd;
+	unsigned int param;
+}__attribute__((packed));
 
 class tcpsocket {
 public:
@@ -37,7 +37,18 @@ public:
 	void assignport(int port);
 	void createsocket();
 	void opensocket();
-	void senduint32(uint32_t);
+
+	void sendcommand(command);
+
+	void set_freq(int);
+	void set_sample_rate(int);
+	void set_gain_mode(int);
+	void set_gain(int);
+	void set_freq_corr(int);
+	void set_if_gain(int, int);
+	void set_agc_mode(int);
+	void set_direct_sampling(int);
+	void set_offset_tuning(int);
 
 	virtual ~tcpsocket();
 };
