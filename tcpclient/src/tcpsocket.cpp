@@ -12,7 +12,7 @@ namespace std {
 tcpsocket::tcpsocket() {
 	// TODO Auto-generated constructor stub
 //	std::string serveraddr = "127.0.0.1";
-	sockfd = NULL;
+	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
 //	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 //	servaddr.sin_port = htons(1234);
@@ -41,7 +41,7 @@ void tcpsocket::opensocket() {
 }
 
 void tcpsocket::senduint32(uint32_t command) {
-
+	//sends little endian
 	send(sockfd, (char*) &command, sizeof(command), 0);
 }
 

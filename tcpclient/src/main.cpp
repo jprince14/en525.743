@@ -20,10 +20,10 @@ rtlsocket->assignport(1234);
 rtlsocket->createsocket();
 rtlsocket->opensocket();
 
+uint32_t command = 99100000;
 
 
-
-
+rtlsocket->senduint32(command);
 
 
 
