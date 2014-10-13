@@ -4,33 +4,38 @@
 //#include <sys/types.h>
 //#include <netinet/in.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <cstring>
-#include <time.h>
-#include <string>
-#include <unistd.h>
 
-//#include <sys/types.h>
-//#include <sys/socket.h>
-//#include <netinet/in.h>
-//#include <arpa/inet.h>
-//#include <netdb.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <unistd.h>
-//#include <string.h>
-//#include <signal.h>
-//#include <time.h>
-//#include <cstdlib>
+
+#include "tcpsocket.hpp"
 
 using namespace std;
 
 int main(int argc, char**argv) {
+
+	printf("test");
+
+tcpsocket* rtlsocket = new tcpsocket;
+rtlsocket->assignipaddr("127.0.0.1");
+rtlsocket->assignport(1234);
+rtlsocket->createsocket();
+rtlsocket->opensocket();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*
 	int sockfd, n;
 	struct sockaddr_in servaddr;
 	char sendline[1000];
@@ -65,4 +70,8 @@ int main(int argc, char**argv) {
 
 	sleep(10);
 	printf("program exiting\n");
+
+	*/
+
+return 0;
 }
