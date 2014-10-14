@@ -18,6 +18,7 @@
 #include <time.h>
 #include <string>
 #include <unistd.h>
+#include <iostream>
 
 namespace std {
 
@@ -39,6 +40,8 @@ public:
 	void opensocket();
 
 	void sendcommand(command);
+	int receive(char*, int);
+	void closesocket();
 
 	void set_freq(int);
 	void set_sample_rate(int);
