@@ -39,7 +39,6 @@ int main(int argc, char**argv) {
 
 	std::thread receivingthread(receivethread, rtlsocket);
 
-
 	std::cout << "enter 1 to stop the program\n";
 
 	int x;
@@ -54,5 +53,7 @@ int main(int argc, char**argv) {
 
 	}
 
+	//Need this or it will seg-fault at termination
+	receivingthread.join();
 	return 0;
 }
