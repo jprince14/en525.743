@@ -36,15 +36,20 @@ void tcpsocket::closesocket() {
 
 }
 
-void tcpsocket::opensocket() {
+bool tcpsocket::opensocket() {
+	bool returnFlag = false;
+	if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == 0) {
+		//Success opening socket
+		returnFlag = true;
+	}
+	return returnFlag;
 
-	connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 }
 
 void tcpsocket::sendcommand(command cmd) {
 	//sends little endian
 
-#warning - add in checking to see if command is open
+#warning - add in checking to see if socket is open
 
 	send(sockfd, (const char*) &cmd, sizeof(cmd), 0);
 }
@@ -56,7 +61,7 @@ int tcpsocket::receive(char* passedinbuffer, int size) {
 	int returnvalue;
 
 	returnvalue = recv(sockfd, (char*) passedinbuffer, size, 0);
-	std::cout << passedinbuffer;
+//	std::cout << passedinbuffer;
 	return returnvalue;
 }
 
@@ -70,37 +75,44 @@ void tcpsocket::set_sample_rate(int sample_rate) {
 	sendcommand(cmd);
 }
 
+//Command not used
 void tcpsocket::set_gain_mode(int manual) {
 	struct command cmd = { 0x03, htonl(manual) };
 	sendcommand(cmd);
 }
 
+//Command not used
 void tcpsocket::set_gain(int gain) {
 	struct command cmd = { 0x04, htonl(gain) };
 	sendcommand(cmd);
 }
 
+//Command not used
 void tcpsocket::set_freq_corr(int ppm) {
 	struct command cmd = { 0x05, htonl(ppm) };
 	sendcommand(cmd);
 }
 
+//Command not used
 void tcpsocket::set_if_gain(int stage, int gain) {
 	uint32_t params = stage << 16 | (gain & 0xffff);
 	struct command cmd = { 0x06, htonl(params) };
 	sendcommand(cmd);
 }
 
+//Command not used
 void tcpsocket::set_agc_mode(int on) {
 	struct command cmd = { 0x08, htonl(on) };
 	sendcommand(cmd);
 }
 
+//Command not used
 void tcpsocket::set_direct_sampling(int on) {
 	struct command cmd = { 0x09, htonl(on) };
 	sendcommand(cmd);
 }
 
+//Command not used
 void tcpsocket::set_offset_tuning(int on) {
 	struct command cmd = { 0x0a, htonl(on) };
 	sendcommand(cmd);

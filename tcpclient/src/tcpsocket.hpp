@@ -37,7 +37,7 @@ public:
 	void assignipaddr(std::string);
 	void assignport(int port);
 	void createsocket();
-	void opensocket();
+	bool opensocket();
 
 	void sendcommand(command);
 	int receive(char*, int);
@@ -45,6 +45,7 @@ public:
 
 	void set_freq(int);
 	void set_sample_rate(int);
+
 	void set_gain_mode(int);
 	void set_gain(int);
 	void set_freq_corr(int);
