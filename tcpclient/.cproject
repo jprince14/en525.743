@@ -41,7 +41,9 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.558659104" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.2108177291" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
-								<option id="gnu.cpp.link.option.libs.789778667" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs"/>
+								<option id="gnu.cpp.link.option.libs.789778667" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
+								</option>
 								<option id="gnu.cpp.link.option.flags.212876042" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-std=c++11" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.833497019" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -101,7 +103,7 @@
 								<option id="gnu.cpp.link.option.libs.1581251684" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.1877736524" superClass="gnu.cpp.link.option.flags" value="-std=c++11" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.1877736524" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-std=c++11" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1024024730" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

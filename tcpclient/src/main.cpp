@@ -3,6 +3,9 @@
 //#include <netdb.h>
 //#include <sys/types.h>
 //#include <netinet/in.h>
+#ifndef debug
+#define debug 1 //1  = debug mode, 0 = normal mode
+#endif
 
 #include "tcpsocket.hpp"
 #include <thread>
@@ -15,7 +18,7 @@ using namespace std;
 //GNU Radio code for interacting with the SDR
 //http://git.osmocom.org/gr-osmosdr/tree/lib/rtl_tcp
 
-char receivebuffer[200000];
+char* receivebuffer = new char[200000];
 
 bool exitflag = false;
 
@@ -34,6 +37,10 @@ int main(int argc, char**argv) {
 	rtlsocket->assignipaddr("127.0.0.1");
 	rtlsocket->assignport(1234);
 	rtlsocket->createsocket();
+
+#if debug
+	printf("test\n");
+#endif
 
 	if (rtlsocket->opensocket() == true) {
 		receivingthread = new std::thread(receivethread, rtlsocket);
@@ -94,6 +101,7 @@ int main(int argc, char**argv) {
 
 	delete (receivingthread);
 	delete (rtlsocket);
+	delete (receivebuffer);
 
 	return 0;
 }
