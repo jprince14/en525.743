@@ -8,15 +8,18 @@
 #endif
 
 #include "tcpsocket.hpp"
-#include <thread>
+#include <thread> // C++11 threading library - requires linking to pthread library
 
 #include <stdio.h>
 #include <iostream>
+#include <liquid/liquid.h> // Liquid DSP Library http://liquidsdr.org/
 
 using namespace std;
 
 //GNU Radio code for interacting with the SDR
 //http://git.osmocom.org/gr-osmosdr/tree/lib/rtl_tcp
+//example command: rtl_tcp -a 127.0.0.1 -p 1234
+
 
 char* receivebuffer = new char[200000];
 

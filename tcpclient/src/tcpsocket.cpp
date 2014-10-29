@@ -61,7 +61,7 @@ int tcpsocket::receive(char* passedinbuffer, int size) {
 	int returnvalue;
 
 	returnvalue = recv(sockfd, (char*) passedinbuffer, size, 0);
-	std::cout << passedinbuffer;
+//	std::cout << passedinbuffer;
 	return returnvalue;
 }
 
