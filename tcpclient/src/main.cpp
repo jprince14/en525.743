@@ -9,32 +9,110 @@
 
 #include "tcpsocket.hpp"
 #include <thread> // C++11 threading library - requires linking to pthread library
+#include <fstream>
 
+#include <rtl-sdr.h>
+#include <math.h>
+#include <complex.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
 #include <liquid/liquid.h> // Liquid DSP Library http://liquidsdr.org/
-
+#define Ampliture_Modulation 1;
+#define Frequency_Modulation 0;
 using namespace std;
+
+//my demod is based heavily on this github repo
+//https://github.com/alxlit/rtl-and-liquid
 
 //GNU Radio code for interacting with the SDR
 //http://git.osmocom.org/gr-osmosdr/tree/lib/rtl_tcp
 //example command: rtl_tcp -a 127.0.0.1 -p 1234
 
-
 char* receivebuffer = new char[200000];
 
 bool exitflag = false;
 
-void receivethread(tcpsocket* socket) {
+void receivethread(tcpsocket* tcpsocket) {
 	while (exitflag == false) {
 //		printf("the thread is running\n");
-		socket->receive(receivebuffer, sizeof(receivebuffer));
+
+		tcpsocket->receive(receivebuffer, sizeof(receivebuffer));
 	}
 
 }
+/*
+ struct demod_common {
+ int demod_type; //0 for Fm, 1 for AM
+ uint32_t center_freq;
+ int inputrate;
+ int outputrate;
+ };
 
+ struct amdemod {
+ ampmodem demod;
+ msresamp_crcf resamp1;
+ float r1;
+ float mi;
+
+ };
+
+ struct fmdemod {
+ freqdem demod;
+ float kf;
+ msresamp_crcf resamp1;
+ resamp_rrrf resamp2;
+ float r1;
+ float r2;
+
+ };
+
+ struct demod {
+ struct fmdemod fm;
+ struct amdemod am;
+
+ struct demod_common common;
+
+ int8_t inputbuffer[5000];
+ int inputlength;
+
+ int16_t outputbuffer[5000];
+ int outputlength;
+
+ };
+
+ void demodam_initialize(demod demod) {
+ demod.am.r1 = (float) demod.common.inputrate
+ / (float) demod.common.outputrate;
+ demod.am.mi = 0.9f;
+
+ float fc = 0.0f;
+ int supressed = 0;
+ liquid_ampmodem_type t = LIQUID_AMPMODEM_DSB;
+
+ demod.am.demod = ampmodem_create(demod.am.mi, fc, t, supressed);
+
+ }*/
+//void demodam_teardown(demod demod) {
+//	ampmodem_destroy(demod.am.demod);
+//	msresamp_crcf_destroy(demod.am.resamp1);
+//}
+//
+//void demodam(demod demod) {
+//	unsigned int nx = (demod.inputlength / 2);
+//	unsigned int ny = ceil(demod.am.r1 * (float) nx);
+//
+//	float complex x[nx];
+//	float complex y[ny];
+//
+//
+//
+//}
 int main(int argc, char**argv) {
-	std::thread *receivingthread;
+	thread *receivingthread;
 
 	tcpsocket* rtlsocket = new tcpsocket;
 	rtlsocket->assignipaddr("127.0.0.1");
@@ -46,7 +124,15 @@ int main(int argc, char**argv) {
 #endif
 
 	if (rtlsocket->opensocket() == true) {
-		receivingthread = new std::thread(receivethread, rtlsocket);
+		receivingthread = new thread(receivethread, rtlsocket);
+
+//		int x = 0;
+//
+//		for (x = 0; x < 10000; x++) {
+//			rtlsocket->receive(receivebuffer, sizeof(receivebuffer));
+//
+//		}
+
 		//TODO Update so that the user can enter the IP and Port through the GUI
 //		receivingthread.detach();
 	}
@@ -101,7 +187,6 @@ int main(int argc, char**argv) {
 
 //Need this or it will seg-fault at termination
 	receivingthread->join();
-
 	delete (receivingthread);
 	delete (rtlsocket);
 	delete (receivebuffer);

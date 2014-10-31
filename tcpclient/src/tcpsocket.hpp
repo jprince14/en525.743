@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <iostream>
 
+#include <fstream>
+
 namespace std {
 
 struct command {
@@ -55,6 +57,9 @@ public:
 	void set_offset_tuning(int);
 
 	virtual ~tcpsocket();
+
+	ofstream myfile;
+
 };
 
 } /* namespace std */

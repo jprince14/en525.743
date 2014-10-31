@@ -13,6 +13,7 @@ tcpsocket::tcpsocket() {
 	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
+	myfile.open("example.bin", ios::out | ios::app | ios::binary);
 }
 
 void tcpsocket::assignipaddr(std::string ipaddr) {
@@ -56,12 +57,41 @@ void tcpsocket::sendcommand(command cmd) {
 
 int tcpsocket::receive(char* passedinbuffer, int size) {
 
-	memset(passedinbuffer, 0x00, size);
-
+//receives 8 bytes I, 8 bytes Q as unsigned int's need to subtrack 127
 	int returnvalue;
 
 	returnvalue = recv(sockfd, (char*) passedinbuffer, size, 0);
-//	std::cout << passedinbuffer;
+	std::cout << returnvalue << std::endl;
+
+
+
+#warning - this part below is causing a seg fault
+	//attempting to turn the unsigned I and Q bits recieved into signed
+
+	/*int8_t I;
+	int8_t Q;
+
+	for (int8_t x = 0; x < (returnvalue / 4); x++) {
+		memcpy(&I, passedinbuffer + x, 2);
+		memcpy(&Q, passedinbuffer + (2 + x), 2);
+
+		printf("I = %x\n", I);
+		printf("Q = %x\n", Q);
+		I -= 127;
+		Q -= 127;
+
+		printf("I = %x\n", I);
+		printf("Q = %x\n", Q);
+
+
+		myfile.write(reinterpret_cast<const char *>(&I), sizeof(int8_t));
+		myfile.write(reinterpret_cast<const char *>(&Q), sizeof(int8_t));
+
+
+
+	}*/
+	myfile.write(passedinbuffer, returnvalue);
+
 	return returnvalue;
 }
 
@@ -120,6 +150,7 @@ void tcpsocket::set_offset_tuning(int on) {
 
 tcpsocket::~tcpsocket() {
 // TODO Auto-generated destructor stub
+	myfile.close();
 }
 
 } /* namespace std */
