@@ -80,17 +80,37 @@ int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 //		I -= 127.0;
 //		Q -= 127.0;
 //
-//		Ifloat = (float) I;
+//		Ifloat = (complex<float>) I;
 //		Qfloat = (float) Q;
 
-		complexbufferI = ((float)passedinbuffer[2 * x]) + ((float)passedinbuffer[(2 * x) + 1] );
+		Ifloat = (float) _I;
+		Qfloat = (float) _Q;
+		//when I write Ifloat and Qfloat to a binary file then pass that input source into the Add Const block things stop working
+
+
+		Ifloat -= 127.0;
+		Qfloat -= 127.0;
+		//what I would do to turn the turn the unsigned value into a signed value
+
+		//what I would do to turn the
+
+
+		myfile.write((char*) &Ifloat, sizeof(Ifloat));
+		myfile.write((char*) &Qfloat, sizeof(Qfloat));
+
+
+
+		complexbufferI.real(Ifloat);
+		complexbufferI.imag(Qfloat);
+
+//				((float)passedinbuffer[2 * x]) + ((float)passedinbuffer[(2 * x) + 1] );
 //		complexbufferQ = (float)Q;
 
 
 //				myfile.write((char*) &complexbufferI, sizeof(complexbufferI));
 
-		myfile.write((char*) &_I, sizeof(_I));
-		myfile.write((char*) &_Q, sizeof(_Q));
+//		myfile.write((char*) &complexbufferI, sizeof(complexbufferI));
+//		myfile.write((char*) &_Q, sizeof(_Q));
 	}
 
 	return returnvalue;
