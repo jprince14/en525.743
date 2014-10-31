@@ -19,8 +19,15 @@
 #include <string>
 #include <unistd.h>
 #include <iostream>
-
+#include <liquid/liquid.h>
 #include <fstream>
+#include <complex.h>
+#include <stdbool.h>
+#include <math.h>
+
+
+#include <math.h>
+#include <complex>
 
 namespace std {
 
@@ -42,7 +49,7 @@ public:
 	bool opensocket();
 
 	void sendcommand(command);
-	int receive(char*, int);
+	int receive(uint8_t*, int);
 	void closesocket();
 
 	void set_freq(int);
@@ -59,7 +66,16 @@ public:
 	virtual ~tcpsocket();
 
 	ofstream myfile;
+	int8_t _I;
+	int8_t _Q;
+	float Ifloat;
+	float Qfloat;
 
+	complex<float>  complexbufferI;
+	complex<float>  complexbufferQ;
+
+//	float complex complexbufferI;
+//	float complex complexbufferQ;
 };
 
 } /* namespace std */

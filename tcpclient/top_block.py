@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Top Block
-# Generated: Fri Oct 31 00:27:57 2014
+# Generated: Fri Oct 31 16:54:13 2014
 ##################################################
 
 from gnuradio import analog
@@ -149,17 +149,17 @@ class top_block(grc_wxgui.top_block_gui):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_deinterleave_0, 1), (self.blocks_float_to_complex_0, 1))
-        self.connect((self.blocks_deinterleave_0, 0), (self.blocks_float_to_complex_0, 0))
-        self.connect((self.blocks_uchar_to_float_0, 0), (self.blocks_deinterleave_0, 0))
         self.connect((self.blocks_file_source_0, 0), (self.blocks_uchar_to_float_0, 0))
-        self.connect((self.low_pass_filter_0, 0), (self.rational_resampler_xxx_0, 0))
-        self.connect((self.rational_resampler_xxx_0, 0), (self.analog_wfm_rcv_0, 0))
-        self.connect((self.analog_wfm_rcv_0, 0), (self.blocks_multiply_const_vxx_0, 0))
-        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.audio_sink_0, 0))
-        self.connect((self.blocks_float_to_complex_0, 0), (self.blocks_add_const_vxx_0, 0))
-        self.connect((self.blocks_add_const_vxx_0, 0), (self.wxgui_fftsink2_0, 0))
         self.connect((self.blocks_add_const_vxx_0, 0), (self.low_pass_filter_0, 0))
+        self.connect((self.blocks_add_const_vxx_0, 0), (self.wxgui_fftsink2_0, 0))
+        self.connect((self.blocks_float_to_complex_0, 0), (self.blocks_add_const_vxx_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.audio_sink_0, 0))
+        self.connect((self.analog_wfm_rcv_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+        self.connect((self.rational_resampler_xxx_0, 0), (self.analog_wfm_rcv_0, 0))
+        self.connect((self.low_pass_filter_0, 0), (self.rational_resampler_xxx_0, 0))
+        self.connect((self.blocks_uchar_to_float_0, 0), (self.blocks_deinterleave_0, 0))
+        self.connect((self.blocks_deinterleave_0, 0), (self.blocks_float_to_complex_0, 0))
+        self.connect((self.blocks_deinterleave_0, 1), (self.blocks_float_to_complex_0, 1))
 
 
 # QT sink close method reimplementation
@@ -187,8 +187,8 @@ class top_block(grc_wxgui.top_block_gui):
         self.samp_rate = samp_rate
         self._samp_rate_slider.set_value(self.samp_rate)
         self._samp_rate_text_box.set_value(self.samp_rate)
-        self.wxgui_fftsink2_0.set_sample_rate(self.samp_rate)
         self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, 75e3, 25e3, firdes.WIN_HAMMING, 6.76))
+        self.wxgui_fftsink2_0.set_sample_rate(self.samp_rate)
 
     def get_channel_width(self):
         return self.channel_width

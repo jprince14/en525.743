@@ -5,8 +5,8 @@
  *      Author: jeremy
  */
 
+//#include <gnuradio/blocks/uchar_to_float.h> // reguired gnuradio-dev package
 #include "tcpsocket.hpp"
-
 namespace std {
 
 tcpsocket::tcpsocket() {
@@ -55,7 +55,7 @@ void tcpsocket::sendcommand(command cmd) {
 	send(sockfd, (const char*) &cmd, sizeof(cmd), 0);
 }
 
-int tcpsocket::receive(char* passedinbuffer, int size) {
+int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 
 //receives 8 bytes I, 8 bytes Q as unsigned int's need to subtrack 127
 	int returnvalue;
@@ -63,34 +63,35 @@ int tcpsocket::receive(char* passedinbuffer, int size) {
 	returnvalue = recv(sockfd, (char*) passedinbuffer, size, 0);
 	std::cout << returnvalue << std::endl;
 
+	float r1; // output rate / input rate
+
+	for (int x = 0; x < (returnvalue / 2); x++) {
+
+		_I = passedinbuffer[2 * x];
+		_Q = passedinbuffer[((2 * x) + 1)];
+
+//		memcpy(&I, passedinbuffer + (2 * x), 1);
+//		memcpy(&Q, passedinbuffer + (1 + (2 * x)), 1);
+//		myfile.write(&_I, 1);
+//		myfile.write(&_Q, 1);
+
+//		double data = atan2(Q,I);
+
+//		I -= 127.0;
+//		Q -= 127.0;
+//
+//		Ifloat = (float) I;
+//		Qfloat = (float) Q;
+
+		complexbufferI = ((float)passedinbuffer[2 * x]) + ((float)passedinbuffer[(2 * x) + 1] );
+//		complexbufferQ = (float)Q;
 
 
-#warning - this part below is causing a seg fault
-	//attempting to turn the unsigned I and Q bits recieved into signed
+//				myfile.write((char*) &complexbufferI, sizeof(complexbufferI));
 
-	/*int8_t I;
-	int8_t Q;
-
-	for (int8_t x = 0; x < (returnvalue / 4); x++) {
-		memcpy(&I, passedinbuffer + x, 2);
-		memcpy(&Q, passedinbuffer + (2 + x), 2);
-
-		printf("I = %x\n", I);
-		printf("Q = %x\n", Q);
-		I -= 127;
-		Q -= 127;
-
-		printf("I = %x\n", I);
-		printf("Q = %x\n", Q);
-
-
-		myfile.write(reinterpret_cast<const char *>(&I), sizeof(int8_t));
-		myfile.write(reinterpret_cast<const char *>(&Q), sizeof(int8_t));
-
-
-
-	}*/
-	myfile.write(passedinbuffer, returnvalue);
+		myfile.write((char*) &_I, sizeof(_I));
+		myfile.write((char*) &_Q, sizeof(_Q));
+	}
 
 	return returnvalue;
 }

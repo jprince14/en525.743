@@ -32,7 +32,7 @@ using namespace std;
 //http://git.osmocom.org/gr-osmosdr/tree/lib/rtl_tcp
 //example command: rtl_tcp -a 127.0.0.1 -p 1234
 
-char* receivebuffer = new char[200000];
+uint8_t* receivebuffer = new uint8_t[200000];
 
 bool exitflag = false;
 
