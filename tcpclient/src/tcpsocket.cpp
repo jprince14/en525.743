@@ -61,56 +61,15 @@ int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 	int returnvalue;
 
 	returnvalue = recv(sockfd, (char*) passedinbuffer, size, 0);
-	std::cout << returnvalue << std::endl;
-
-	float r1; // output rate / input rate
+//	std::cout << returnvalue << std::endl;
 
 	for (int x = 0; x < (returnvalue / 2); x++) {
 
 		_I = passedinbuffer[2 * x];
 		_Q = passedinbuffer[((2 * x) + 1)];
-
-//		memcpy(&I, passedinbuffer + (2 * x), 1);
-//		memcpy(&Q, passedinbuffer + (1 + (2 * x)), 1);
-//		myfile.write(&_I, 1);
-//		myfile.write(&_Q, 1);
-
-//		double data = atan2(Q,I);
-
-//		I -= 127.0;
-//		Q -= 127.0;
-//
-//		Ifloat = (complex<float>) I;
-//		Qfloat = (float) Q;
-
-		Ifloat = (float) _I;
-		Qfloat = (float) _Q;
-		//when I write Ifloat and Qfloat to a binary file then pass that input source into the Add Const block things stop working
-
-
-		Ifloat -= 127.0;
-		Qfloat -= 127.0;
-		//what I would do to turn the turn the unsigned value into a signed value
-
-		//what I would do to turn the
-
-
-		myfile.write((char*) &Ifloat, sizeof(Ifloat));
-		myfile.write((char*) &Qfloat, sizeof(Qfloat));
-
-
-
-		complexbufferI.real(Ifloat);
-		complexbufferI.imag(Qfloat);
-
-//				((float)passedinbuffer[2 * x]) + ((float)passedinbuffer[(2 * x) + 1] );
-//		complexbufferQ = (float)Q;
-
-
-//				myfile.write((char*) &complexbufferI, sizeof(complexbufferI));
-
-//		myfile.write((char*) &complexbufferI, sizeof(complexbufferI));
-//		myfile.write((char*) &_Q, sizeof(_Q));
+		complexbuffer.real(scale * (_I - 127));
+		complexbuffer.imag(scale * (_Q - 127));
+		myfile.write((char*) &complexbuffer, sizeof(complexbuffer));
 	}
 
 	return returnvalue;

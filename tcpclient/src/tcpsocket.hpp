@@ -25,7 +25,6 @@
 #include <stdbool.h>
 #include <math.h>
 
-
 #include <math.h>
 #include <complex>
 
@@ -45,8 +44,7 @@ public:
 
 	void assignipaddr(std::string);
 	void assignport(int port);
-	void createsocket();
-	bool opensocket();
+	void createsocket();bool opensocket();
 
 	void sendcommand(command);
 	int receive(uint8_t*, int);
@@ -66,16 +64,11 @@ public:
 	virtual ~tcpsocket();
 
 	ofstream myfile;
-	int8_t _I;
-	int8_t _Q;
-	float Ifloat;
-	float Qfloat;
+	int _I;
+	int _Q;
+	const float scale = 1.0 / 128.0;
 
-	complex<float>  complexbufferI;
-	complex<float>  complexbufferQ;
-
-//	float complex complexbufferI;
-//	float complex complexbufferQ;
+	complex<float> complexbuffer;
 };
 
 } /* namespace std */
