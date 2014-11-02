@@ -17,7 +17,6 @@
 #include <iostream>
 #include <liquid/liquid.h>
 #include <fstream>
-//#include <complex>
 
 #include <math.h>
 #include <complex.h>
@@ -66,8 +65,8 @@ public:
 	ofstream myfile;
 	int _I;
 	int _Q;
-	const float scale = 1.0 / 128.0;
-	float _Complex fc;
+	const float scale;
+	float complex fc;
 
     float kf;        // modulation factor
 //    liquid_freqdem_type type;
@@ -75,13 +74,6 @@ public:
     // create modulator/demodulator objects
     freqdem fdem;
     float output;
-
-    extern "C" {
-    float complex s;        // modulated signal
-    }
-
-
-	complex<float> complexbuffer;
 };
 
 } /* namespace std */

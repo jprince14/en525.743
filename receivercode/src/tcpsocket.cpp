@@ -8,17 +8,17 @@
 #include "tcpsocket.hpp"
 namespace std {
 
-tcpsocket::tcpsocket() {
+tcpsocket::tcpsocket() :
+		_I(0), _Q(0), scale(1.0 / 128.0), fc(0), output(0.0) {
 	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
 	myfile.open("example.bin", ios::out | ios::app | ios::binary);
 
-
 	kf = 0.1f;        // modulation factor
 
-    // create modulator/demodulator objects
-    fdem = freqdem_create(kf);
+	// create modulator/demodulator objects
+	fdem = freqdem_create(kf);
 
 }
 
@@ -73,16 +73,20 @@ int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 
 		_I = passedinbuffer[2 * x];
 		_Q = passedinbuffer[((2 * x) + 1)];
-		complexbuffer.real(scale * (_I - 127));
-		complexbuffer.imag(scale * (_Q - 127));
-		memcpy(&fc,&complexbuffer, sizeof(complexbuffer));
+//		complexbuffer.real(scale * (_I - 127));
+//		complexbuffer.imag(scale * (_Q - 127));
+//		memcpy(&fc,&complexbuffer, sizeof(complexbuffer));
 //		myfile.write((char*) &complexbuffer, sizeof(complexbuffer));
-		myfile.write((char*) &fc, sizeof(fc));
+		fc = scale * (_I - 127) + I * scale * (_Q - 127);
 
+//		myfile.write((char*) &_I, sizeof(_I));
+//		myfile.write((char*) &_Q, sizeof(_Q));
+
+		myfile.write((char*) &fc, sizeof(fc));
 
 		//need to convert complex float to liquiid float
 
-	    freqdem_demodulate_block(fdem, (float complex)fc, 1, output);
+//	    freqdem_demodulate_block(fdem, fc, 1, output);
 
 	}
 
@@ -144,7 +148,7 @@ void tcpsocket::set_offset_tuning(int on) {
 
 tcpsocket::~tcpsocket() {
 // TODO Auto-generated destructor stub
-    freqdem_destroy(fdem);
+	freqdem_destroy(fdem);
 	myfile.close();
 }
 
