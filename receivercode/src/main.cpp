@@ -35,7 +35,6 @@ using namespace std;
 uint8_t* receivebuffer = new uint8_t[200000];
 bool exitflag = false;
 
-
 //bool exitflag = false;
 //
 //void receivethread(tcpsocket* tcpsocket) {
@@ -48,7 +47,6 @@ bool exitflag = false;
 //}
 
 void* menufunction(void* ptr) {
-
 
 	tcpsocket* socketptr = (tcpsocket*) ptr;
 
@@ -99,7 +97,6 @@ void* menufunction(void* ptr) {
 }
 
 int main(int argc, char**argv) {
-//	thread *receivingthread;
 
 	pthread_t menuthread;
 
@@ -114,25 +111,22 @@ int main(int argc, char**argv) {
 
 	if (rtlsocket->opensocket() == true) {
 
-		pthread_create(&menuthread, NULL, menufunction, rtlsocket);
+		if (pthread_create(&menuthread, NULL, menufunction, rtlsocket) == 0) {
 
-		while (exitflag == false) {
+			while (exitflag == false) {
+				rtlsocket->receive(receivebuffer, sizeof(receivebuffer));
+			}
 
-//#warning - start thread here for receiving responses from user
-
-			rtlsocket->receive(receivebuffer, sizeof(receivebuffer));
-		}
+			pthread_join(menuthread, NULL);
 
 //TODO Update so that the user can enter the IP and Port through the GUI
-//		receivingthread.detach();
-	}
-
-	else {
+		} else {
+			printf("error unable to open thread\n");
+		}
+	} else {
 		std::cout << "Unable to connect to socket, program exiting\n";
 		exit(0);
 	}
-
-	pthread_join(menuthread,NULL);
 
 	delete (rtlsocket);
 	delete (receivebuffer);

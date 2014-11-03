@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Top Block
-# Generated: Sun Nov  2 21:36:27 2014
+# Generated: Sun Nov  2 23:02:04 2014
 ##################################################
 
 from gnuradio import analog
@@ -135,7 +135,7 @@ class top_block(grc_wxgui.top_block_gui):
         )
         self.Add(_center_freq_slider_sizer)
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vff((audio_gain, ))
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, "/home/jeremy/git/en525.743/receivercode/Debug/example.bin", True)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, "/home/jeremy/git/en525.743/receivercode/Debug/complexbuffer.bin", True)
         self.audio_sink_0 = audio.sink(48000, "", True)
         self.analog_wfm_rcv_0 = analog.wfm_rcv(
         	quad_rate=480e3,
@@ -178,8 +178,8 @@ class top_block(grc_wxgui.top_block_gui):
         self.samp_rate = samp_rate
         self._samp_rate_slider.set_value(self.samp_rate)
         self._samp_rate_text_box.set_value(self.samp_rate)
-        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, 75e3, 25e3, firdes.WIN_HAMMING, 6.76))
         self.wxgui_fftsink2_0_0.set_sample_rate(self.samp_rate)
+        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, 75e3, 25e3, firdes.WIN_HAMMING, 6.76))
 
     def get_channel_width(self):
         return self.channel_width

@@ -62,18 +62,33 @@ public:
 
 	virtual ~tcpsocket();
 
-	ofstream myfile;
+	ofstream _complexbufferfile;
+	ofstream _filteredfile;
+	ofstream _demodulatedfile;
+	ofstream _filteredanddemodulatedfile;
+
+
 	int _I;
 	int _Q;
 	const float scale;
-	float complex fc;
+	float complex complexinputbuffer[500];
+	float filter_fc;          // filter cutoff frequency
+	float filter_As;         // stop-band attenuation [dB]
+	float filter_mu;          // fractional timing offset
+	float filter_ft; //filter transition
+	float kf;        // modulation factor
+	unsigned int h_len;
+	unsigned int buffercounter;
 
-    float kf;        // modulation factor
 //    liquid_freqdem_type type;
 
-    // create modulator/demodulator objects
-    freqdem fdem;
-    float output;
+	// create modulator/demodulator objects
+	freqdem fdem;
+	float filterpulse[500];
+	float complex filteroutput[500];
+	float demodoutput[500];
+	float filtereddemodoutput[500];
+
 };
 
 } /* namespace std */
