@@ -30,7 +30,7 @@ tcpsocket::tcpsocket() :
 	filter_mu = 0.0f;          // fractional timing offset
 
 	h_len = estimate_req_filter_len(filter_ft, filter_As);
-//	liquid_firdes_kaiser(h_len, filter_fc, filter_As, filter_mu, filterpulse);
+	liquid_firdes_kaiser(h_len, filter_fc, filter_As, filter_mu, filterpulse);
 	printf("h_len = %d\n", h_len);
 }
 
