@@ -71,7 +71,7 @@ public:
 	int _I;
 	int _Q;
 	const float scale;
-	float complex complexinputbuffer[500];
+	float complex complexinputbuffer;
 	float filter_fc;          // filter cutoff frequency
 	float filter_As;         // stop-band attenuation [dB]
 	float filter_mu;          // fractional timing offset
@@ -86,7 +86,7 @@ public:
 	freqdem fdem;
 	float filterpulse[500];
 	float complex filteroutput[500];
-	float demodoutput[500];
+	float demodoutput;
 	float filtereddemodoutput[500];
 
 };
