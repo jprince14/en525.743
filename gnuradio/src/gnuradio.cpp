@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
-#include <liquid/liquid.h> // Liquid DSP Library http://liquidsdr.org/
 #define Ampliture_Modulation 1;
 #define Frequency_Modulation 0;
 using namespace std;

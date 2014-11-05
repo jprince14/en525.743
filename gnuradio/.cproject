@@ -34,9 +34,8 @@
 								<option id="gnu.cpp.link.option.libs.918476310" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="m"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="c"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="liquid"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gnuradio-runtime"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gnuradio-filter"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1767048188" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -92,6 +91,7 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="liquid"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gnuradio-runtime"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gnuradio-filter"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1579131339" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

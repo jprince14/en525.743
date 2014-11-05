@@ -14,24 +14,20 @@ tcpsocket::tcpsocket() :
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
 
-	_complexbufferfile.open("complexbuffer.bin", ios::out | ios::app | ios::binary);
+	_complexbufferfile.open("complexbuffer.bin",
+			ios::out | ios::app | ios::binary);
 	_filteredfile.open("filtered.bin", ios::out | ios::app | ios::binary);
 	_demodulatedfile.open("demodulated.bin", ios::out | ios::app | ios::binary);
-	_filteredanddemodulatedfile.open("filteredanddemodulated.bin", ios::out | ios::app | ios::binary);
+	_filteredanddemodulatedfile.open("filteredanddemodulated.bin",
+			ios::out | ios::app | ios::binary);
 
-	kf = 0.1f;        // modulation factor
+	filter = gr::filter::firdes::low_pass(1, 2e6, 75e3, 25e3,
+			gr::filter::firdes::WIN_HAMMING, 6.76);
 
-	// create modulator/demodulator objects
-	fdem = freqdem_create(kf);
+	filtersize = filter.size();
 
-	filter_fc = 0.375f;          // filter cutoff frequency = fc / 2*fs
-	filter_ft = 0.125f;			//filter transition = ft / 2*fs
-	filter_As = 60.0f;         // stop-band attenuation [dB]
-	filter_mu = 0.0f;          // fractional timing offset
+	std::cout << "filter size = " << filtersize << std::endl;
 
-	h_len = estimate_req_filter_len(filter_ft, filter_As);
-//	liquid_firdes_kaiser(h_len, filter_fc, filter_As, filter_mu, filterpulse);
-	printf("h_len = %d\n", h_len);
 }
 
 void tcpsocket::assignipaddr(std::string ipaddr) {
@@ -77,17 +73,24 @@ int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 //	std::cout << returnvalue << std::endl;
 
 	for (int x = 0; x < (returnvalue / 2); x++) {
-
-		if (buffercounter == h_len) {
-
-			//This is working as writing the input in complex form to a file
-			_complexbufferfile.write((char*) &complexinputbuffer, sizeof(float complex) * buffercounter);
-
+//
+		if (buffercounter == filtersize) {
+//
+//			//This is working as writing the input in complex form to a file
+			_complexbufferfile.write((char*) &complexinputbuffer,
+					sizeof(std::complex<float>) * buffercounter);
+//
 			//multiply input buffer by filter
-			for (unsigned int length = 0; length < h_len; length++) {
-//				filteroutput[length] = filterpulse[length] * complexinputbuffer[length];
+			for (unsigned int length = 0; length < filtersize; length++) {
+				filteroutput[length] = filter.at(length)
+						* complexinputbuffer[length];
 			}
-			_filteredfile.write((char*) &filteroutput, sizeof(float complex) * buffercounter);
+			_filteredfile.write((char*) &filteroutput,
+					sizeof(float) * buffercounter);
+
+
+			//resample
+
 
 //			freqdem_demodulate_block(fdem, reinterpret_cast<liquid_float_complex*>(&filteroutput), buffercounter,
 //					filtereddemodoutput);
@@ -97,8 +100,6 @@ int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 //			freqdem_demodulate(fdem, complexinputbuffer, demodoutput);
 //			_demodulatedfile.write((char*) &demodoutput, sizeof(float complex) * buffercounter);
 
-//			}
-
 //			myfile.write((char*) &demodoutput, sizeof(float) * buffercounter);
 
 			buffercounter = 0;
@@ -106,15 +107,14 @@ int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 
 		_I = passedinbuffer[2 * x];
 		_Q = passedinbuffer[((2 * x) + 1)];
-//		complexbuffer.real(scale * (_I - 127));
-//		complexbuffer.imag(scale * (_Q - 127));
+		input.real(scale * (_I - 127));
+		input.imag(scale * (_Q - 127));
 //		memcpy(&fc,&complexbuffer, sizeof(complexbuffer));d
 //		myfile.write((char*) &complexbuffer, sizeof(complexbuffer));
 
-//		complexinputbuffer = (scale * (_I - 127)) + (I * scale * (_Q - 127));
+		complexinputbuffer[buffercounter] = input;
 
-		freqdem_demodulate(fdem, static_cast<liquid_float_complex>(complexinputbuffer), &demodoutput);
-		_demodulatedfile.write((char*) &demodoutput, sizeof(float complex) * buffercounter);
+//	_demodulatedfile.write((char*) &demodoutput, sizeof(float complex) * buffercounter);
 
 //		myfile.write((char*) &complexinputbuffer[buffercounter], sizeof(float complex));
 
@@ -122,13 +122,13 @@ int tcpsocket::receive(uint8_t* passedinbuffer, int size) {
 
 //		buffercounter++;
 
-	}
+//}
 
-	//		myfile.write((char*) &_I, sizeof(_I));
+//		myfile.write((char*) &_I, sizeof(_I));
 //		myfile.write((char*) &_Q, sizeof(_Q));
 
 //	    freqdem_demodulate_block(fdem, complexinputbuffer, 1, output);
-
+	}
 	return returnvalue;
 }
 
@@ -187,7 +187,6 @@ void tcpsocket::set_offset_tuning(int on) {
 
 tcpsocket::~tcpsocket() {
 // TODO Auto-generated destructor stub
-	freqdem_destroy(fdem);
 	_complexbufferfile.close();
 	_filteredfile.close();
 	_demodulatedfile.close();

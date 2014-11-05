@@ -15,11 +15,12 @@
 #include <string>
 #include <unistd.h>
 #include <iostream>
-#include <liquid/liquid.h>
+#include <gnuradio/filter/firdes.h>
+#include <gnuradio/analog/frequency_modulator_fc.h>
 #include <fstream>
 
 #include <math.h>
-#include <complex.h>
+#include <complex>
 //#include <stdbool.h>
 //#include <cstring>
 //#include <time.h>
@@ -60,6 +61,8 @@ public:
 	void set_direct_sampling(int);
 	void set_offset_tuning(int);
 
+	unsigned int filtersize;
+
 	virtual ~tcpsocket();
 
 	ofstream _complexbufferfile;
@@ -67,25 +70,18 @@ public:
 	ofstream _demodulatedfile;
 	ofstream _filteredanddemodulatedfile;
 
-
 	int _I;
 	int _Q;
 	const float scale;
-	float  complexinputbuffer;
-	float filter_fc;          // filter cutoff frequency
-	float filter_As;         // stop-band attenuation [dB]
-	float filter_mu;          // fractional timing offset
-	float filter_ft; //filter transition
-	float kf;        // modulation factor
-	unsigned int h_len;
+	std::complex<float> complexinputbuffer[1000];
+	std::complex<float> input;
 	unsigned int buffercounter;
 
-//    liquid_freqdem_type type;
+	vector<float> filter;
 
 	// create modulator/demodulator objects
-	freqdem fdem;
 	float filterpulse[500];
-	float  filteroutput[500];
+	float filteroutput[500];
 	float demodoutput;
 	float filtereddemodoutput[500];
 

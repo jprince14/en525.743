@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lm -lc -lliquid -lpthread -lgnuradio-runtime
+LIBS := -lm -lc -lpthread -lgnuradio-filter
 
