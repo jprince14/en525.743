@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <liquid/liquid.h> // Liquid DSP Library http://liquidsdr.org/
+#include <lame/lame.h>
+
+
 #define Ampliture_Modulation 1;
 #define Frequency_Modulation 0;
 
@@ -53,11 +56,6 @@ void* menufunction(void* ptr) {
 			set_sample_rate(sdr_socket, samplingrate);
 		}
 		//Exit
-		if (x == 4) {
-			printf("test = %d", sdr_socket->test);
-
-		}
-
 		if (x == 9) {
 
 			printf("Exit signal received\n");
@@ -85,10 +83,6 @@ int main(int argc, char**argv) {
 	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
 
-	rtlsdr->test = 99;
-
-	printf("test = %d", rtlsdr->test);
-
 	if (tcp_opensocket(rtlsdr) == 0) {
 
 		if (pthread_create(&menuthread, NULL, menufunction, rtlsdr) == 0) {
@@ -96,6 +90,7 @@ int main(int argc, char**argv) {
 			while (rtlsdr->receiverexitflag == false) {
 				tcp_receive(rtlsdr);
 				demod_work(rtlsdr, processingstruct);
+				//encode audio - format is 32bit little endian float
 			}
 
 			pthread_join(menuthread, NULL);

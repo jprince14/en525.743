@@ -19,7 +19,6 @@ struct tcp_socket {
 	bool receiverexitflag;
 	char buffer[1000];
 	int receivesize;
-	int test;
 };
 
 void tcp_setaddress(struct tcp_socket* inputsocket, char* inputstring);

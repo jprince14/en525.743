@@ -20,12 +20,13 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 		float complex y = 0;
 		iirfilt_crcf_execute(dsp->filter, x, &y);
 
-		// resample to 48 kHz (one input should produce either 0 or 1 output)
-		unsigned int nw_resamp = 0;
-		msresamp_crcf_execute(dsp->resampler, &y, 1, dsp->buf_resamp, &nw_resamp);
-
 		// run frequency demodulation
-		freqdem_demodulate_block(dsp->fdem, dsp->buf_resamp, nw_resamp, dsp->buf_demod);
+		freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
+
+		// resample to 48 kHz (one input should produce either 0 or 1 output)
+		dsp->nw_resamp = 0;
+		msresamp_crcf_execute(dsp->resampler, &dsp->buf_demod, 1, dsp->buf_resamp, &dsp->nw_resamp);
+
 	}
 }
 

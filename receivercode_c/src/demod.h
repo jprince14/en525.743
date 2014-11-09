@@ -4,6 +4,7 @@ struct liquidobjects {
 	freqdem fdem;
 	float complex buf_resamp[10];    // resampler output buffer
 	float buf_demod[10];     // demodulator output buffer
+	unsigned int nw_resamp;
 };
 
 void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp);
