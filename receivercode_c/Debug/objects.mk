@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS :=
+LIBS := -lc -lm -lliquid -lpthread -lrtlsdr
 

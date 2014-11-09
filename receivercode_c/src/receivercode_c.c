@@ -8,6 +8,7 @@
 #endif
 
 #include "tcpsocket.h"
+#include "demod.h"
 #include <pthread.h>
 
 #include <rtl-sdr.h>
@@ -24,25 +25,23 @@
 
 void* menufunction(void* ptr) {
 
-	struct tcp_socket* sdrsocket = (struct tcp_socket*) ptr;
+	struct tcp_socket* sdr_socket = (struct tcp_socket*) ptr;
 
-#warning - make this the secondary t
 	printf("Welcome to Jeremy's EN525.743 Embedded Development Project\n");
 	printf("\tEnter 1 to adjust the frequency of the SDR\n");
 	printf("\tEnter 2 to adjust the sampling rate of the SDR\n");
 	printf("\tEnter 3 to adjust the demodulator\n");
 	printf("\tEnter 9 to exit\n");
 
-	int *x;
-	while (fgets(x, sizeof(int), stdin) != NULL) {
+	int x;
+	while (scanf("%d", &x) != EOF) {
 		//Adjust frequency
 		if (x == 1) {
 //TODO print out the frequency range of the tuner
 			printf("Enter the desired tuning frequency (in Hz)\n");
 			uint32_t freq;
-			std
-			::cin >> freq;
-			socketptr->set_freq(sdrsocket, freq);
+			scanf("%d", &freq);
+			set_freq(*sdr_socket, freq);
 		}
 
 		// adjust sampling rate
@@ -50,22 +49,14 @@ void* menufunction(void* ptr) {
 //TODO print out the potential sampling rates of the tuner
 			printf("Enter the desired sampling rate (in Hz)\n");
 			uint32_t samplingrate;
-			std
-			::cin >> samplingrate;
-			socketptr->set_sample_rate(samplingrate);
+			scanf("%d", &samplingrate);
+			set_sample_rate(*sdr_socket, samplingrate);
 		}
-
-		//adjust modulation type
-		if (x == 3) {
-			//TODO: Come back here - set the modulation type
-		}
-
 		//Exit
 		if (x == 9) {
 
 			printf("Exit signal received\n");
-			sdrsocket.receiverexitflag = true;
-			socketptr->closesocket();
+			sdr_socket->receiverexitflag = true;
 			break;
 		}
 	}
@@ -78,21 +69,25 @@ int main(int argc, char**argv) {
 	pthread_t menuthread;
 
 	struct tcp_socket rtlsdr;
+	struct liquidobjects processing;
+//	memset(&rtlsdr, 0, sizeof(rtlsdr));                /* zero the struct */
 	tcp_setaddress(rtlsdr, "127.0.0.1");
 	tcp_setport(rtlsdr, 1234);
-	tcp_createsocket(rtlsdr);
 	rtlsdr.receiverexitflag = false;
+	tcp_createsocket(rtlsdr);
 
-#if debug
-	printf("test\n");
-#endif
+#warnign crease dsp stuff here
 
-	if (tcpopensocket(rtlsdr) == true) {
+
+
+	if (tcp_opensocket(rtlsdr) == true) {
 
 		if (pthread_create(&menuthread, NULL, menufunction, (void *) &rtlsdr) == 0) {
 
 			while (rtlsdr.receiverexitflag == false) {
-//				rtlsocket->receive(receivebuffer, sizeof(receivebuffer));
+				printf("connected");
+				tcp_receive(rtlsdr);
+				demod_work(rtlsdr, processing);
 			}
 
 			pthread_join(menuthread, NULL);
@@ -106,6 +101,7 @@ int main(int argc, char**argv) {
 		exit(0);
 	}
 
+	closesocket(rtlsdr);
 	return 0;
 }
 

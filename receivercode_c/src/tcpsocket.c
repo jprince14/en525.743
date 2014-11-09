@@ -1,11 +1,7 @@
 #include "tcpsocket.h"
 
-struct tcp_socket {
-	struct sockaddr_in servaddr;
-	int sockfd;
-};
-
 void tcp_setaddress(struct tcp_socket inputsocket, char* inputstring) {
+
 	inputsocket.servaddr.sin_addr.s_addr = inet_addr(inputstring);
 
 }
@@ -20,15 +16,19 @@ void tcp_createsocket(struct tcp_socket inputsocket) {
 }
 bool tcp_opensocket(struct tcp_socket inputsocket) {
 	bool returnFlag = false;
-	if (connect(inputsocket.sockfd, (struct sockaddr *) &inputsocket.servaddr, sizeof(inputsocket.servaddr)) == 0) {
+	if (connect(inputsocket.sockfd, (struct sockaddr *) &inputsocket.servaddr, sizeof(struct sockaddr_in)) == 0) {
 		//Success opening socket
 		returnFlag = true;
 	}
 	return returnFlag;
 }
 
-int receive(uint8_t*, int, char* buffer) {
+void tcp_sendcommand(struct tcp_socket inputsocket, struct command cmd) {
+	send(inputsocket.sockfd, (const char*) &cmd, sizeof(cmd), 0);
+}
 
+void tcp_receive(struct tcp_socket inputsocket) {
+	inputsocket.receivesize = recv(inputsocket.sockfd, (char*) inputsocket.buffer, 1000, 0);
 }
 
 void closesocket(struct tcp_socket inputsocket) {
@@ -37,14 +37,10 @@ void closesocket(struct tcp_socket inputsocket) {
 
 void set_freq(struct tcp_socket inputsocket, int freq) {
 	struct command cmd = { 0x01, htonl(freq) };
-	sendcommand(inputsocket, cmd);
+	tcp_sendcommand(inputsocket, cmd);
 }
-void set_sample_rate(struct tcp_socket inputsocket,  int samplerate) {
+void set_sample_rate(struct tcp_socket inputsocket, int samplerate) {
 	struct command cmd = { 0x02, htonl(samplerate) };
-	sendcommand(inputsocket, cmd);
+	tcp_sendcommand(inputsocket, cmd);
 }
 
-void sendcommand(struct tcp_socket inputsocket, struct command cmd)
-{
-	send(inputsocket.sockfd, (const char*) &cmd, sizeof(cmd), 0);
-}
