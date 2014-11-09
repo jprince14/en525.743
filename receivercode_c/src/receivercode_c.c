@@ -91,7 +91,7 @@ int main(int argc, char**argv) {
 
 	if (tcp_opensocket(rtlsdr) == 0) {
 
-		if (pthread_create(&menuthread, NULL, menufunction, (void *) &rtlsdr) == 0) {
+		if (pthread_create(&menuthread, NULL, menufunction, rtlsdr) == 0) {
 
 			while (rtlsdr->receiverexitflag == false) {
 				tcp_receive(rtlsdr);
