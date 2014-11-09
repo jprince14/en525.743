@@ -17,7 +17,7 @@ struct tcp_socket {
 	struct sockaddr_in servaddr;
 	int sockfd;
 	bool receiverexitflag;
-	char buffer[1000];
+	uint8_t buffer[1000];
 	int receivesize;
 };
 

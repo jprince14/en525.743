@@ -76,12 +76,13 @@ int main(int argc, char**argv) {
 	struct liquidobjects* processingstruct;
 	processingstruct = malloc(sizeof(struct liquidobjects));
 
-//	memset(&rtlsdr, 0, sizeof(rtlsdr));                /* zero the struct */
 	tcp_setaddress(rtlsdr, "127.0.0.1");
 	tcp_setport(rtlsdr, 1234);
 	rtlsdr->receiverexitflag = false;
 	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
+
+	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 
 	if (tcp_opensocket(rtlsdr) == 0) {
 

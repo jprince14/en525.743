@@ -11,10 +11,12 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 	for (x = 0; x < (rtl->receivesize / 2); x++) {
 
 		_I = rtl->buffer[2 * x];
+
 		_Q = rtl->buffer[((2 * x) + 1)];
 
 		// convert to float complex type
 		float complex x = (float) (_I - 127.0) / 128.0f + (float) (_Q - 127.0) / 128.0f * _Complex_I;
+
 
 		// filter result
 		float complex y = 0;
@@ -22,10 +24,12 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 
 		// run frequency demodulation
 		freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
+//		fwrite(&dsp->buf_demod, sizeof(float), 1, dsp->fid_demod);
 
 		// resample to 48 kHz (one input should produce either 0 or 1 output)
 		dsp->nw_resamp = 0;
-		msresamp_crcf_execute(dsp->resampler, &dsp->buf_demod, 1, dsp->buf_resamp, &dsp->nw_resamp);
+		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp, &dsp->nw_resamp);
+//		fwrite(dsp->buf_resamp, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 
 	}
 }

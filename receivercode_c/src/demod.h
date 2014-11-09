@@ -5,6 +5,7 @@ struct liquidobjects {
 	float complex buf_resamp[10];    // resampler output buffer
 	float buf_demod[10];     // demodulator output buffer
 	unsigned int nw_resamp;
+	FILE * fid_demod; //This file is only for testing purposes to write output to a file
 };
 
 void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp);
