@@ -79,7 +79,6 @@ int main(int argc, char**argv) {
 	struct encoder* mp3encoder;
 	mp3encoder = malloc(sizeof(struct encoder));
 
-
 	tcp_setaddress(rtlsdr, "127.0.0.1");
 	tcp_setport(rtlsdr, 1234);
 	rtlsdr->receiverexitflag = false;
@@ -89,7 +88,6 @@ int main(int argc, char**argv) {
 
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
-
 
 	if (tcp_opensocket(rtlsdr) == 0) {
 
@@ -112,7 +110,7 @@ int main(int argc, char**argv) {
 		printf("Unable to connect to socket, program exiting\n");
 		exit(0);
 	}
-	closesocket(rtlsdr);
+	tcp_closesocket(rtlsdr);
 
 	free(rtlsdr);
 	free(processingstruct);

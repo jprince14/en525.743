@@ -10,7 +10,7 @@
 
 struct encoder {
 	lame_t lame;
-	unsigned char mp3_buffer[50];
+	unsigned char mp3_buffer[8192*21];
 	unsigned int mp3buffsize;
 	FILE * outfile; //This file is only for testing purposes to write output to a file
 

@@ -1,10 +1,9 @@
 #include "tcpsocket.h"
 
 void tcp_setaddress(struct tcp_socket* inputsocket, char* inputstring) {
-
 	inputsocket->servaddr.sin_addr.s_addr = inet_addr(inputstring);
-
 }
+
 void tcp_setport(struct tcp_socket* inputsocket, int port) {
 	inputsocket->servaddr.sin_port = htons(port);
 }
@@ -12,10 +11,11 @@ void tcp_setport(struct tcp_socket* inputsocket, int port) {
 void tcp_createsocket(struct tcp_socket* inputsocket) {
 	inputsocket->servaddr.sin_family = AF_INET;
 	inputsocket->sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
 }
+
 int tcp_opensocket(struct tcp_socket* inputsocket) {
 	bool returnFlag = -1;
+
 	if (connect(inputsocket->sockfd, (struct sockaddr *) &inputsocket->servaddr, sizeof(struct sockaddr_in)) == 0) {
 		//Success opening socket
 		returnFlag = 0;
@@ -31,7 +31,7 @@ void tcp_receive(struct tcp_socket* inputsocket) {
 	inputsocket->receivesize = recv(inputsocket->sockfd, (char*) inputsocket->buffer, 1000, 0);
 }
 
-void closesocket(struct tcp_socket* inputsocket) {
+void tcp_closesocket(struct tcp_socket* inputsocket) {
 	close(inputsocket->sockfd);
 }
 

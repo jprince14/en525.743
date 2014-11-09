@@ -13,7 +13,6 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 		// convert to float complex type
 		float complex x = (float) (_I - 127.0) / 128.0f + (float) (_Q - 127.0) / 128.0f * _Complex_I;
 
-
 		// filter result
 		float complex y = 0;
 		iirfilt_crcf_execute(dsp->filter, x, &y);
@@ -22,20 +21,20 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 		freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
 //		fwrite(&dsp->buf_demod, sizeof(float), 1, dsp->fid_demod);
 
-		// resample to 48 kHz (one input should produce either 0 or 1 output)
+// resample to 48 kHz (one input should produce either 0 or 1 output)
 		dsp->nw_resamp = 0;
 		//this line below gives a warning but it works fine
-		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, &dsp->buf_resamp, &dsp->nw_resamp);
-		dsp->buffercounter += dsp->nw_resamp;
+		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
-		fwrite(dsp->buf_resamp, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+		dsp->buffercounter += (dsp->nw_resamp);
 
 	}
 }
 
 void initialize_dspobjects(struct liquidobjects* dsp) {
 	float sample_rate_rf = 2000e3; // input sample rate from RTL SDR - this works when i put it through a resampler of decimation 10
-	float sample_rate_audio = 48e3;   // audio sample rate
+	float sample_rate_audio = 16e3;   // audio sample rate
 	float cutoff_freq_rf = 75e3;   // RF cut-off frequency
 	dsp->buffercounter = 0;
 	//create filter

@@ -7,19 +7,22 @@ C_SRCS += \
 ../src/demod.c \
 ../src/encoder.c \
 ../src/receivercode_c.c \
-../src/tcpsocket.c 
+../src/tcpsocket.c \
+../src/udpsocket.c 
 
 OBJS += \
 ./src/demod.o \
 ./src/encoder.o \
 ./src/receivercode_c.o \
-./src/tcpsocket.o 
+./src/tcpsocket.o \
+./src/udpsocket.o 
 
 C_DEPS += \
 ./src/demod.d \
 ./src/encoder.d \
 ./src/receivercode_c.d \
-./src/tcpsocket.d 
+./src/tcpsocket.d \
+./src/udpsocket.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
