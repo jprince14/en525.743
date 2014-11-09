@@ -5,16 +5,19 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/demod.c \
+../src/encoder.c \
 ../src/receivercode_c.c \
 ../src/tcpsocket.c 
 
 OBJS += \
 ./src/demod.o \
+./src/encoder.o \
 ./src/receivercode_c.o \
 ./src/tcpsocket.o 
 
 C_DEPS += \
 ./src/demod.d \
+./src/encoder.d \
 ./src/receivercode_c.d \
 ./src/tcpsocket.d 
 

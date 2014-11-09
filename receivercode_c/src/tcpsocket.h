@@ -1,3 +1,7 @@
+#ifndef TCPSOCKET_H
+#define TCPSOCKET_H
+
+
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -30,3 +34,5 @@ void tcp_receive(struct tcp_socket* inputsocket);
 void closesocket(struct tcp_socket* inputsocket);
 void set_freq(struct tcp_socket* inputsocket, int freq);
 void set_sample_rate(struct tcp_socket* inputsocket, int samplerate);
+
+#endif

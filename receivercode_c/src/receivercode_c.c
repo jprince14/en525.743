@@ -9,6 +9,7 @@
 
 #include "tcpsocket.h"
 #include "demod.h"
+#include "encoder.h"
 #include <pthread.h>
 
 #include <rtl-sdr.h>
@@ -75,14 +76,20 @@ int main(int argc, char**argv) {
 	rtlsdr = malloc(sizeof(struct tcp_socket));
 	struct liquidobjects* processingstruct;
 	processingstruct = malloc(sizeof(struct liquidobjects));
+	struct encoder* mp3encoder;
+	mp3encoder = malloc(sizeof(struct encoder));
+
 
 	tcp_setaddress(rtlsdr, "127.0.0.1");
 	tcp_setport(rtlsdr, 1234);
 	rtlsdr->receiverexitflag = false;
 	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
+	initialize_encoder(mp3encoder);
 
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
+	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
+
 
 	if (tcp_opensocket(rtlsdr) == 0) {
 
@@ -91,6 +98,7 @@ int main(int argc, char**argv) {
 			while (rtlsdr->receiverexitflag == false) {
 				tcp_receive(rtlsdr);
 				demod_work(rtlsdr, processingstruct);
+				encoder_work(processingstruct, mp3encoder);
 				//encode audio - format is 32bit little endian float
 			}
 
@@ -108,6 +116,7 @@ int main(int argc, char**argv) {
 
 	free(rtlsdr);
 	free(processingstruct);
+	free(mp3encoder);
 
 	return 0;
 }

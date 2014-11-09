@@ -1,8 +1,4 @@
-#include "tcpsocket.h"
 #include "demod.h"
-#include <math.h>
-#include <liquid/liquid.h>
-#include <complex.h>
 
 void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 	int _I;
@@ -28,8 +24,11 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 
 		// resample to 48 kHz (one input should produce either 0 or 1 output)
 		dsp->nw_resamp = 0;
-		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp, &dsp->nw_resamp);
-//		fwrite(dsp->buf_resamp, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+		//this line below gives a warning but it works fine
+		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, &dsp->buf_resamp, &dsp->nw_resamp);
+		dsp->buffercounter += dsp->nw_resamp;
+//		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
+		fwrite(dsp->buf_resamp, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 
 	}
 }
@@ -38,7 +37,7 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 	float sample_rate_rf = 2000e3; // input sample rate from RTL SDR - this works when i put it through a resampler of decimation 10
 	float sample_rate_audio = 48e3;   // audio sample rate
 	float cutoff_freq_rf = 75e3;   // RF cut-off frequency
-
+	dsp->buffercounter = 0;
 	//create filter
 	dsp->filter = iirfilt_crcf_create_prototype(LIQUID_IIRDES_BUTTER,           // Butterworth filter
 			LIQUID_IIRDES_LOWPASS,          // Low-pass design
