@@ -41,7 +41,7 @@ void* menufunction(void* ptr) {
 			printf("Enter the desired tuning frequency (in Hz)\n");
 			uint32_t freq;
 			scanf("%d", &freq);
-			set_freq(*sdr_socket, freq);
+			set_freq(sdr_socket, freq);
 		}
 
 		// adjust sampling rate
@@ -50,9 +50,14 @@ void* menufunction(void* ptr) {
 			printf("Enter the desired sampling rate (in Hz)\n");
 			uint32_t samplingrate;
 			scanf("%d", &samplingrate);
-			set_sample_rate(*sdr_socket, samplingrate);
+			set_sample_rate(sdr_socket, samplingrate);
 		}
 		//Exit
+		if (x == 4) {
+			printf("test = %d", sdr_socket->test);
+
+		}
+
 		if (x == 9) {
 
 			printf("Exit signal received\n");
@@ -68,26 +73,29 @@ int main(int argc, char**argv) {
 
 	pthread_t menuthread;
 
-	struct tcp_socket rtlsdr;
-	struct liquidobjects processing;
+	struct tcp_socket* rtlsdr;
+	rtlsdr = malloc(sizeof(struct tcp_socket));
+	struct liquidobjects* processingstruct;
+	processingstruct = malloc(sizeof(struct liquidobjects));
+
 //	memset(&rtlsdr, 0, sizeof(rtlsdr));                /* zero the struct */
 	tcp_setaddress(rtlsdr, "127.0.0.1");
 	tcp_setport(rtlsdr, 1234);
-	rtlsdr.receiverexitflag = false;
+	rtlsdr->receiverexitflag = false;
 	tcp_createsocket(rtlsdr);
+	initialize_dspobjects(processingstruct);
 
-#warnign crease dsp stuff here
+	rtlsdr->test = 99;
 
+	printf("test = %d", rtlsdr->test);
 
-
-	if (tcp_opensocket(rtlsdr) == true) {
+	if (tcp_opensocket(rtlsdr) == 0) {
 
 		if (pthread_create(&menuthread, NULL, menufunction, (void *) &rtlsdr) == 0) {
 
-			while (rtlsdr.receiverexitflag == false) {
-				printf("connected");
+			while (rtlsdr->receiverexitflag == false) {
 				tcp_receive(rtlsdr);
-				demod_work(rtlsdr, processing);
+				demod_work(rtlsdr, processingstruct);
 			}
 
 			pthread_join(menuthread, NULL);
@@ -100,8 +108,11 @@ int main(int argc, char**argv) {
 		printf("Unable to connect to socket, program exiting\n");
 		exit(0);
 	}
-
 	closesocket(rtlsdr);
+
+	free(rtlsdr);
+	free(processingstruct);
+
 	return 0;
 }
 

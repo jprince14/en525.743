@@ -19,14 +19,15 @@ struct tcp_socket {
 	bool receiverexitflag;
 	char buffer[1000];
 	int receivesize;
+	int test;
 };
 
-void tcp_setaddress(struct tcp_socket inputsocket, char* inputstring);
-void tcp_setport(struct tcp_socket inputsocket, int port);
-void tcp_createsocket(struct tcp_socket inputsocket);
-bool tcp_opensocket(struct tcp_socket inputsocket);
-void tcp_sendcommand(struct tcp_socket inputsocket, struct command cmd);
-void tcp_receive(struct tcp_socket inputsocket);
-void closesocket(struct tcp_socket inputsocket);
-void set_freq(struct tcp_socket inputsocket, int freq);
-void set_sample_rate(struct tcp_socket inputsocket, int samplerate);
+void tcp_setaddress(struct tcp_socket* inputsocket, char* inputstring);
+void tcp_setport(struct tcp_socket* inputsocket, int port);
+void tcp_createsocket(struct tcp_socket* inputsocket);
+int tcp_opensocket(struct tcp_socket* inputsocket);
+void tcp_sendcommand(struct tcp_socket* inputsocket, struct command cmd);
+void tcp_receive(struct tcp_socket* inputsocket);
+void closesocket(struct tcp_socket* inputsocket);
+void set_freq(struct tcp_socket* inputsocket, int freq);
+void set_sample_rate(struct tcp_socket* inputsocket, int samplerate);
