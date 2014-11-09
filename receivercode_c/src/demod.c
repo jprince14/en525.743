@@ -56,3 +56,38 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 	dsp->fdem = freqdem_create(kf);
 }
 
+//void demod_work_testing(struct tcp_socket* rtl, struct liquidobjects* dsp) {
+//	int _I;
+//	int _Q;
+//	int x;
+//	for (x = 0; x < (rtl->receivesize / 2); x++) {
+//
+//		_I = rtl->buffer[2 * x];
+//
+//		_Q = rtl->buffer[((2 * x) + 1)];
+//
+//		// convert to float complex type
+//		float complex x = (float) (_I - 127.0) / 128.0f + (float) (_Q - 127.0) / 128.0f * _Complex_I;
+//
+//		// filter result
+//		float complex y = 0;
+//		iirfilt_crcf_execute(dsp->filter, x, &y);
+//
+//		// run frequency demodulation
+//		freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
+////		fwrite(&dsp->buf_demod, sizeof(float), 1, dsp->fid_demod);
+//
+//// resample to 48 kHz (one input should produce either 0 or 1 output)
+//		dsp->nw_resamp = 0;
+//		//this line below gives a warning but it works fine
+//		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp, &dsp->nw_resamp);
+////		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
+//
+//		encoder_work_2(dsp,lame_obj);
+//
+//
+////		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+////		dsp->buffercounter += (dsp->nw_resamp);
+//
+//	}
+//}

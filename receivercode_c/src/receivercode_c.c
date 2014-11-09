@@ -97,7 +97,6 @@ int main(int argc, char**argv) {
 				tcp_receive(rtlsdr);
 				demod_work(rtlsdr, processingstruct);
 				encoder_work(processingstruct, mp3encoder);
-				//encode audio - format is 32bit little endian float
 			}
 
 			pthread_join(menuthread, NULL);
