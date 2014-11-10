@@ -15,7 +15,7 @@ struct encoder {
 
 };
 
-void initialize_encoder(struct encoder* lame_encoder);
+void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
 void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder);
 

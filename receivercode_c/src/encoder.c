@@ -1,10 +1,11 @@
 #include "encoder.h"
 
-void initialize_encoder(struct encoder* lame_encoder) {
+void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 	lame_encoder->lame = lame_init();
-	lame_set_in_samplerate(lame_encoder->lame, (16000));
+	lame_set_in_samplerate(lame_encoder->lame, (dsp->sample_rate_audio));
 	lame_set_VBR(lame_encoder->lame, vbr_off); //sets cbr
 	lame_set_VBR_q(lame_encoder->lame, 5); // 0 = best vbr q 5=~128k
+//	lame_set_out_samplerate(lame_encoder->lame, (dsp->sample_rate_audio));
 //	lame_set_num_channels(lame_encoder->lame, 1);
 //	lame_set_out_samplerate(lame_encoder->lame, 16000);
 	lame_init_params(lame_encoder->lame);

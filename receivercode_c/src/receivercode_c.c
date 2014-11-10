@@ -23,7 +23,6 @@
 #include <liquid/liquid.h> // Liquid DSP Library http://liquidsdr.org/
 #include <lame/lame.h>
 
-
 #define Ampliture_Modulation 1;
 #define Frequency_Modulation 0;
 
@@ -84,7 +83,7 @@ int main(int argc, char**argv) {
 	rtlsdr->receiverexitflag = false;
 	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
-	initialize_encoder(mp3encoder);
+	initialize_encoder(processingstruct, mp3encoder);
 
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");

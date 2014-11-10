@@ -24,7 +24,9 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 // resample to 48 kHz (one input should produce either 0 or 1 output)
 		dsp->nw_resamp = 0;
 		//this line below gives a warning but it works fine
-		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
+		msresamp_rrrf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
+
+//		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
 		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 		dsp->buffercounter += (dsp->nw_resamp);
@@ -49,7 +51,9 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 	// create resampler
 	float resampler_rate = dsp->sample_rate_audio / dsp->sample_rate_rf;
 	float resampler_As = 60.0f;
-	dsp->resampler = msresamp_crcf_create(resampler_rate, resampler_As);
+//	dsp->resampler = msresamp_crcf_create(resampler_rate, resampler_As);
+		dsp->resampler = msresamp_rrrf_create(resampler_rate, resampler_As);
+
 
 	//create demodulator
 	float kf = 0.1f;        // modulation factor

@@ -10,7 +10,8 @@
 
 struct liquidobjects {
 	iirfilt_crcf filter;
-	msresamp_crcf resampler;
+//	msresamp_crcf resampler;
+	msresamp_rrrf resampler;
 	freqdem fdem;
 	float buf_resamp[8192 * 21];    // resampler output buffer
 	float buf_demod[10];     // demodulator output buffer
