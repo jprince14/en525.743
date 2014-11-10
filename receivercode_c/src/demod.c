@@ -33,21 +33,21 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 }
 
 void initialize_dspobjects(struct liquidobjects* dsp) {
-	float sample_rate_rf = 2000e3; // input sample rate from RTL SDR - this works when i put it through a resampler of decimation 10
-	float sample_rate_audio = 16e3;   // audio sample rate
-	float cutoff_freq_rf = 75e3;   // RF cut-off frequency
+	dsp->sample_rate_rf = 2000e3; // input sample rate from RTL SDR
+	dsp->sample_rate_audio = 48e3;   // audio sample rate
+	dsp->cutoff_freq_rf = 75e3;   // RF cut-off frequency
 	dsp->buffercounter = 0;
 	//create filter
 	dsp->filter = iirfilt_crcf_create_prototype(LIQUID_IIRDES_BUTTER,           // Butterworth filter
 			LIQUID_IIRDES_LOWPASS,          // Low-pass design
 			LIQUID_IIRDES_SOS,              // second-order sections format
 			7,                              // 7th order
-			cutoff_freq_rf / sample_rate_rf,  // appropriate cut-off
+			dsp->cutoff_freq_rf / dsp->sample_rate_rf,  // appropriate cut-off
 			0,                              // centered at baseband
 			1, 60);                         // ignored for Butterworth
 
 	// create resampler
-	float resampler_rate = sample_rate_audio / sample_rate_rf;
+	float resampler_rate = dsp->sample_rate_audio / dsp->sample_rate_rf;
 	float resampler_As = 60.0f;
 	dsp->resampler = msresamp_crcf_create(resampler_rate, resampler_As);
 

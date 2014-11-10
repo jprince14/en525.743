@@ -98,7 +98,7 @@ int main(int argc, char**argv) {
 				demod_work(rtlsdr, processingstruct);
 				encoder_work(processingstruct, mp3encoder);
 			}
-
+			encoder_flush(rtlsdr, processingstruct);
 			pthread_join(menuthread, NULL);
 
 //TODO Update so that the user can enter the IP and Port through the GUI

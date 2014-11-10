@@ -2,10 +2,11 @@
 
 void initialize_encoder(struct encoder* lame_encoder) {
 	lame_encoder->lame = lame_init();
-	lame_set_in_samplerate(lame_encoder->lame, (16000/2 ));
+	lame_set_in_samplerate(lame_encoder->lame, (16000));
 	lame_set_VBR(lame_encoder->lame, vbr_off); //sets cbr
-	lame_set_VBR_q(lame_encoder->lame,5); // 0 = best vbr q 5=~128k
-	lame_set_out_samplerate(lame_encoder->lame, 16000);
+	lame_set_VBR_q(lame_encoder->lame, 5); // 0 = best vbr q 5=~128k
+//	lame_set_num_channels(lame_encoder->lame, 1);
+//	lame_set_out_samplerate(lame_encoder->lame, 16000);
 	lame_init_params(lame_encoder->lame);
 }
 
@@ -25,6 +26,11 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 		dsp->buffercounter = 0;
 
 	}
+}
+
+void encoder_flush(struct liquidobjects* dsp, struct encoder* lame_encoder) {
+	lame_encode_flush(lame_encoder->lame, lame_encoder->mp3_buffer, 21 * 8192);
+
 }
 
 //void encoder_work_2(struct liquidobjects* dsp, struct encoder* lame_encoder) {

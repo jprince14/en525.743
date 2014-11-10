@@ -16,6 +16,9 @@ struct liquidobjects {
 	float buf_demod[10];     // demodulator output buffer
 	unsigned int nw_resamp;
 	unsigned int buffercounter;
+	float sample_rate_rf; // input sample rate from RTL SDR
+	float sample_rate_audio;   // audio sample rate
+	float cutoff_freq_rf;   // RF cut-off frequency
 	FILE * fid_demod; //This file is only for testing purposes to write output to a file
 };
 
