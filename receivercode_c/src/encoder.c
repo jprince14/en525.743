@@ -14,9 +14,9 @@ void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder)
 void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 
 	if (dsp->buffercounter > (10000)) {
-		printf("dsp->buffercounter = %d\n", dsp->buffercounter);
+//		printf("dsp->buffercounter = %d\n", dsp->buffercounter);
 
-		lame_encoder->mp3buffsize = lame_encode_buffer_interleaved_ieee_float(lame_encoder->lame, dsp->buf_resamp,
+		lame_encoder->mp3buffsize = lame_encode_buffer_ieee_float(lame_encoder->lame, dsp->buf_resamp, dsp->buf_resamp,
 				dsp->buffercounter, lame_encoder->mp3_buffer, 21 * 8192);
 
 		curl_easy_setopt(lame_encoder->curl, CURLOPT_READDATA, lame_encoder->mp3_buffer);
@@ -28,10 +28,10 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 		/* Now run off and do what you've been told! */
 		lame_encoder->res = curl_easy_perform(lame_encoder->curl);
 
-		printf("lame_encoder->mp3buffsize = %d\n", lame_encoder->mp3buffsize);
+//		printf("lame_encoder->mp3buffsize = %d\n", lame_encoder->mp3buffsize);
 //	printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
 
-//		fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
+		fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
 
 //		fwrite(dsp->buf_resamp, sizeof(float), dsp->buffercounter, lame_encoder->outfile);
 		dsp->buffercounter = 0;
@@ -39,13 +39,11 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 	}
 }
 
-void close_encoderojects(struct encoder* lame_encoder)
-{
-    curl_easy_cleanup(lame_encoder->curl);
-    curl_global_cleanup();
+void close_encoderojects(struct encoder* lame_encoder) {
+	curl_easy_cleanup(lame_encoder->curl);
+	curl_global_cleanup();
 
 }
-
 
 void encoder_flush(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 	lame_encode_flush(lame_encoder->lame, lame_encoder->mp3_buffer, 21 * 8192);
@@ -85,7 +83,8 @@ void initializecurl(struct encoder* encoder) {
 
 		/* specify target URL, and note that this URL should include a file
 		 name, not only a directory */
-		curl_easy_setopt(encoder->curl, CURLOPT_URL, "http://localhost:8001/stream.mp3");
+		curl_easy_setopt(encoder->curl, CURLOPT_URL, "http://localhost:8001/sdr_stream");
+//		curl_easy_setopt(encoder->curl, CURLOPT_URL, "http://user:password@localhost:8001/sdr_stream");
 	}
 }
 

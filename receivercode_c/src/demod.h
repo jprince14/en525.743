@@ -9,7 +9,6 @@
 #include <complex.h>
 #include "structures.h"
 
-
 void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp);
 void initialize_dspobjects(struct liquidobjects* dsp);
 
