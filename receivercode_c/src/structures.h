@@ -5,12 +5,17 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <lame/lame.h>
+#include <curl/curl.h>
 
 struct encoder {
 	lame_t lame;
 	unsigned char mp3_buffer[8192 * 21];
 	unsigned int mp3buffsize;
 	FILE * outfile; //This file is only for testing purposes to write output to a file
+
+	//Curl variables
+	CURL *curl;
+	CURLcode res;
 
 };
 

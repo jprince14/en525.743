@@ -8,7 +8,9 @@
 #include <lame/lame.h>
 #include "structures.h"
 
-
+#include <curl/curl.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
@@ -16,7 +18,11 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
 void encoder_flush(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
-//void encoder_work_2(struct liquidobjects* dsp, struct encoder* lame_encoder) ;
+static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream);
+
+void initializecurl(struct encoder* encoder);
+
+void close_encoderojects(struct encoder* lame_encoder);
 
 #endif
 

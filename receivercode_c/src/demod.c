@@ -28,7 +28,7 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 
 //		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
-		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+//		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 		dsp->buffercounter += (dsp->nw_resamp);
 
 	}

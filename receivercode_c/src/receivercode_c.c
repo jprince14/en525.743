@@ -10,6 +10,8 @@
 #include "tcpsocket.h"
 #include "demod.h"
 #include "encoder.h"
+#include "structures.h"
+
 #include <pthread.h>
 
 #include <rtl-sdr.h>
@@ -84,6 +86,7 @@ int main(int argc, char**argv) {
 	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
 	initialize_encoder(processingstruct, mp3encoder);
+	initializecurl(mp3encoder);
 
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
@@ -98,6 +101,8 @@ int main(int argc, char**argv) {
 				encoder_work(processingstruct, mp3encoder);
 			}
 			encoder_flush(rtlsdr, processingstruct);
+
+
 			pthread_join(menuthread, NULL);
 
 //TODO Update so that the user can enter the IP and Port through the GUI
