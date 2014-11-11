@@ -12,20 +12,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "encoder.h"
+#include "structures.h"
 
 
-struct command {
-	unsigned char cmd;
-	unsigned int param;
-}__attribute__((packed));
 
-struct tcp_socket {
-	struct sockaddr_in servaddr;
-	int sockfd;
-	bool receiverexitflag;
-	uint8_t buffer[1000];
-	int receivesize;
-};
 
 void tcp_setaddress(struct tcp_socket* inputsocket, char* inputstring);
 void tcp_setport(struct tcp_socket* inputsocket, int port);

@@ -6,14 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <lame/lame.h>
+#include "structures.h"
 
-struct encoder {
-	lame_t lame;
-	unsigned char mp3_buffer[8192 * 21];
-	unsigned int mp3buffsize;
-	FILE * outfile; //This file is only for testing purposes to write output to a file
 
-};
 
 void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
