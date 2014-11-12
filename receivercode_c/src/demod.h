@@ -11,7 +11,6 @@
 
 void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp);
 void initialize_dspobjects(struct liquidobjects* dsp);
-
-//void demod_work_testing(struct tcp_socket* rtl, struct liquidobjects* dsp, struct encoder* lame_obj);
+void demod_close(struct liquidobjects* dsp);
 
 #endif

@@ -42,6 +42,7 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 void close_encoderojects(struct encoder* lame_encoder) {
 	curl_easy_cleanup(lame_encoder->curl);
 	curl_global_cleanup();
+	lame_close(lame_encoder->lame);
 
 }
 

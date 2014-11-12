@@ -86,7 +86,6 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 // create resampler
 	float resampler_rate = dsp->sample_rate_audio / dsp->sample_rate_rf;
 	float resampler_As = 60.0f;
-//	dsp->resampler = msresamp_crcf_create(resampler_rate, resampler_As);
 	dsp->resampler = msresamp_rrrf_create(resampler_rate, resampler_As);
 
 //create demodulator
@@ -95,9 +94,18 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 
 	float mod_index = 0.1f;         // modulation index (bandwidth)
 	float fc = 0.0f;                // AM carrier
-	liquid_ampmodem_type type = LIQUID_AMPMODEM_USB;
+	liquid_ampmodem_type type = LIQUID_AMPMODEM_DSB;
 	int suppressed_carrier = 0;     // suppress the carrier?
-	dsp->ampdemod = ampmodem_create(mod_index, fc, type, LIQUID_AMPMODEM_DSB);
+	dsp->ampdemod = ampmodem_create(mod_index, fc, type, suppressed_carrier);
 
+}
+
+void demod_close(struct liquidobjects* dsp) {
+
+	ampmodem_destroy(dsp->ampdemod);
+	freqdem_destroy(dsp->fdem);
+	msresamp_rrrf_destroy(dsp->resampler);
+	iirfilt_crcf_destroy(dsp->fm_filter);
+	iirfilt_crcf_destroy(dsp->am_filter);
 }
 

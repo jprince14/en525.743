@@ -66,6 +66,10 @@ void* menufunction(void* ptr) {
 				if (sdr_control->demodstruct->demodtype == mono_FM) {
 					printf("Demod type is already set to FM-mono\n");
 				} else {
+					printf("Enter the desired tuning frequency (in Hz)\n");
+					uint32_t freq;
+					scanf("%d", &freq);
+					set_freq(sdr_control->socketstruct, freq);
 					sdr_control->demodstruct->demodtype = mono_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
@@ -73,6 +77,10 @@ void* menufunction(void* ptr) {
 				if (sdr_control->demodstruct->demodtype == stereo_FM) {
 					printf("Demod type is already set to FM-stereo\n");
 				} else {
+					printf("Enter the desired tuning frequency (in Hz)\n");
+					uint32_t freq;
+					scanf("%d", &freq);
+					set_freq(sdr_control->socketstruct, freq);
 					sdr_control->demodstruct->demodtype = stereo_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
@@ -83,135 +91,20 @@ void* menufunction(void* ptr) {
 					int cbchannel;
 					printf("Select CB Radio Channel - select 1 - 40\n");
 					scanf("%d", &cbchannel);
-					switch (cbchannel) {
-
-					case 1:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_1);
-						break;
-					case 2:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_2);
-						break;
-					case 3:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_3);
-						break;
-					case 4:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_4);
-						break;
-					case 5:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_5);
-						break;
-					case 6:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_6);
-						break;
-					case 7:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_7);
-						break;
-					case 8:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_8);
-						break;
-					case 9:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_9);
-						break;
-					case 10:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_10);
-						break;
-					case 11:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_11);
-						break;
-					case 12:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_12);
-						break;
-					case 13:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_13);
-						break;
-					case 14:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_14);
-						break;
-					case 15:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_15);
-						break;
-					case 16:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_16);
-						break;
-					case 17:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_17);
-						break;
-					case 18:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_18);
-						break;
-					case 19:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_19);
-						break;
-					case 20:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_20);
-						break;
-					case 21:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_21);
-						break;
-					case 22:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_22);
-						break;
-					case 23:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_23);
-						break;
-					case 24:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_24);
-						break;
-					case 25:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_25);
-						break;
-					case 26:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_26);
-						break;
-					case 27:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_27);
-						break;
-					case 28:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_28);
-						break;
-					case 29:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_29);
-						break;
-					case 30:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_30);
-						break;
-					case 31:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_31);
-						break;
-					case 32:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_32);
-						break;
-					case 33:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_33);
-						break;
-					case 34:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_34);
-						break;
-					case 35:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_35);
-						break;
-					case 36:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_36);
-						break;
-					case 37:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_37);
-						break;
-					case 38:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_38);
-						break;
-					case 39:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_30);
-						break;
-					case 40:
-						set_freq(sdr_control->socketstruct, CB_CHANNEL_40);
-						break;
-					}
+					set_cb_freq(sdr_control->socketstruct, cbchannel);
 
 					sdr_control->demodstruct->demodtype = cb_AM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
 			}
+		}
 
+		//CB Channel Menu
+		if (x == 4) {
+			int cbchannel;
+			printf("Select CB Radio Channel - select 1 - 40\n");
+			scanf("%d", &cbchannel);
+			set_cb_freq(sdr_control->socketstruct, cbchannel);
 		}
 
 		//Exit
@@ -237,7 +130,7 @@ int main(int argc, char**argv) {
 	struct encoder* mp3encoder;
 	mp3encoder = malloc(sizeof(struct encoder));
 
-	//Initialize the control structure
+//Initialize the control structure
 	struct control* controlstruct;
 	controlstruct = malloc(sizeof(struct control));
 	controlstruct->demodstruct = processingstruct;
@@ -275,8 +168,13 @@ int main(int argc, char**argv) {
 		printf("Unable to connect to socket, program exiting\n");
 		exit(0);
 	}
-	tcp_closesocket(rtlsdr);
 
+	//clean up
+	tcp_closesocket(rtlsdr);
+	demod_close(processingstruct);
+	close_encoderojects(mp3encoder);
+	fclose(processingstruct->fid_demod);
+	fclose(mp3encoder->outfile);
 	free(controlstruct);
 	free(rtlsdr);
 	free(processingstruct);
