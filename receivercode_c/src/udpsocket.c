@@ -22,7 +22,12 @@ int udp_opensocket(struct udp_socket* inputsocket) {
 	return returnFlag;
 }
 
-void udp_senddata(struct udp_socket* inputsocket) {
+void udp_senddata(struct udp_socket* inputsocket, struct encoder* lame) {
+//	send(inputsocket->sockfd, (const char*) &lame->mp3_buffer, lame->mp3buffsize, 0);
+    sendto(inputsocket->sockfd,(const char*) &lame->mp3_buffer, lame->mp3buffsize, 0,
+           (struct sockaddr *)&inputsocket->servaddr,sizeof(inputsocket->servaddr));
+
+//	fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
 
 }
 

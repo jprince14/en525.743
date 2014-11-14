@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../src/audio.c \
 ../src/demod.c \
 ../src/encoder.c \
 ../src/receivercode_c.c \
@@ -11,6 +12,7 @@ C_SRCS += \
 ../src/udpsocket.c 
 
 OBJS += \
+./src/audio.o \
 ./src/demod.o \
 ./src/encoder.o \
 ./src/receivercode_c.o \
@@ -18,6 +20,7 @@ OBJS += \
 ./src/udpsocket.o 
 
 C_DEPS += \
+./src/audio.d \
 ./src/demod.d \
 ./src/encoder.d \
 ./src/receivercode_c.d \

@@ -37,6 +37,7 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="rtlsdr"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="mp3lame"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="curl"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="asound"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1625037697" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -89,6 +90,7 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="rtlsdr"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="mp3lame"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="shoutcast"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="asound"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.500509799" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

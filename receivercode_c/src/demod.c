@@ -61,7 +61,7 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 
 	dsp->FM_cutoff_freq_rf = 75e3;   // RF cut-off frequency
 
-	dsp->AM_cutoff_freq_rf = 10e3;   // RF cut-off frequency
+	dsp->AM_cutoff_freq_rf = 5e3;   // RF cut-off frequency
 
 	dsp->demodtype = mono_FM; //setting the default demod type
 

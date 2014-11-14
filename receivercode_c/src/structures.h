@@ -2,10 +2,14 @@
 #define STRUCT_H
 
 #include <liquid/liquid.h>
+#include <stdbool.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <lame/lame.h>
 #include <curl/curl.h>
+#include <alsa/asoundlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define mono_FM 0
 #define stereo_FM 1
@@ -54,7 +58,6 @@
 
 int cbradiofreqs[40];
 
-
 struct encoder {
 	lame_t lame;
 	unsigned char mp3_buffer[8192 * 21];
@@ -102,6 +105,16 @@ struct tcp_socket {
 struct control {
 	struct tcp_socket* socketstruct;
 	struct liquidobjects* demodstruct;
+};
+
+struct udp_socket {
+	struct sockaddr_in servaddr;
+	int sockfd;
+};
+
+struct audiostruct {
+	snd_pcm_t *playback_handle;
+	snd_pcm_hw_params_t *hw_params;
 };
 
 #endif

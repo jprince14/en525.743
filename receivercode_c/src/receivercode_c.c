@@ -8,6 +8,7 @@
 #endif
 
 #include "tcpsocket.h"
+#include "udpsocket.h"
 #include "demod.h"
 #include "encoder.h"
 #include "structures.h"
@@ -36,6 +37,7 @@ void* menufunction(void* ptr) {
 	printf("\tEnter 1 to adjust the frequency of the SDR\n");
 	printf("\tEnter 2 to adjust the sampling rate of the SDR\n");
 	printf("\tEnter 3 to adjust the demodulator\n");
+	printf("\tEnter 4 to adjust the CB Channel\n");
 	printf("\tEnter 9 to exit\n");
 
 	int x;
@@ -114,6 +116,13 @@ void* menufunction(void* ptr) {
 			sdr_control->socketstruct->receiverexitflag = true;
 			break;
 		}
+
+		printf("\n\tEnter 1 to adjust the frequency of the SDR\n");
+		printf("\tEnter 2 to adjust the sampling rate of the SDR\n");
+		printf("\tEnter 3 to adjust the demodulator\n");
+		printf("\tEnter 4 to adjust the CB Channel\n");
+		printf("\tEnter 9 to exit\n");
+
 	}
 
 	return NULL;
@@ -129,6 +138,13 @@ int main(int argc, char**argv) {
 	processingstruct = malloc(sizeof(struct liquidobjects));
 	struct encoder* mp3encoder;
 	mp3encoder = malloc(sizeof(struct encoder));
+	struct udp_socket* mp3transmitter;
+	mp3transmitter = malloc(sizeof(struct udp_socket));
+
+	struct audiostruct* alsastruct;
+	alsastruct = malloc(sizeof(struct audiostruct));
+
+
 
 //Initialize the control structure
 	struct control* controlstruct;
@@ -138,23 +154,31 @@ int main(int argc, char**argv) {
 
 	tcp_setaddress(rtlsdr, "127.0.0.1");
 	tcp_setport(rtlsdr, 1234);
+	udp_setaddress(mp3transmitter, "127.0.0.10");
+	udp_setport(mp3transmitter, 5678);
+	udp_createsocket(mp3transmitter);
+
 	rtlsdr->receiverexitflag = false;
 	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
 	initialize_encoder(processingstruct, mp3encoder);
 	initializecurl(mp3encoder);
 
+	initializeaudio(alsastruct);
+
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
 
 	if (tcp_opensocket(rtlsdr) == 0) {
-
+//		if (ipenudpsocker == 0) {
 		if (pthread_create(&menuthread, NULL, menufunction, controlstruct) == 0) {
 
 			while (rtlsdr->receiverexitflag == false) {
 				tcp_receive(rtlsdr);
 				demod_work(rtlsdr, processingstruct);
-				encoder_work(processingstruct, mp3encoder);
+				playaudio(processingstruct, alsastruct);
+
+				encoder_work(processingstruct, mp3encoder, mp3transmitter);
 			}
 			encoder_flush(rtlsdr, processingstruct);
 
@@ -164,8 +188,11 @@ int main(int argc, char**argv) {
 		} else {
 			printf("error unable to open thread\n");
 		}
+//		} else {
+//			printf("Unable to open UDP socket for transmitting the demodulated and encoded audio from the SDR\n");
+//		}
 	} else {
-		printf("Unable to connect to socket, program exiting\n");
+		printf("Unable to connect to the TCP socket for receiving data from the SDR, program exiting\n");
 		exit(0);
 	}
 
@@ -175,6 +202,8 @@ int main(int argc, char**argv) {
 	close_encoderojects(mp3encoder);
 	fclose(processingstruct->fid_demod);
 	fclose(mp3encoder->outfile);
+	closeaudio(alsastruct);
+	free(alsastruct);
 	free(controlstruct);
 	free(rtlsdr);
 	free(processingstruct);

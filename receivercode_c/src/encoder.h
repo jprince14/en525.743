@@ -14,7 +14,7 @@
 
 void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
-void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder);
+void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder, struct udp_socket* inputsocket);
 
 void encoder_flush(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
