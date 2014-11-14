@@ -98,6 +98,8 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 	int suppressed_carrier = 0;     // suppress the carrier?
 	dsp->ampdemod = ampmodem_create(mod_index, fc, type, suppressed_carrier);
 
+	dsp->buffermax = 5000;
+
 }
 
 void demod_close(struct liquidobjects* dsp) {

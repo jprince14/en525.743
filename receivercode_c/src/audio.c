@@ -56,9 +56,12 @@ void initializeaudio(struct audiostruct* alsa) {
 
 void playaudio(struct liquidobjects* dsp, struct audiostruct* alsa) {
 	int err;
-	if ((err = snd_pcm_writei(alsa->playback_handle, dsp->buf_resamp, dsp->buffercounter)) != dsp->buffercounter) {
-		fprintf(stderr, "write to audio interface failed (%s)\n", snd_strerror(err));
-		exit(1);
+	if (dsp->buffercounter > (dsp->buffermax)) {
+
+		if ((err = snd_pcm_writei(alsa->playback_handle, dsp->buf_resamp, dsp->buffercounter)) != dsp->buffercounter) {
+			fprintf(stderr, "write to audio interface failed (%s)\n", snd_strerror(err));
+			exit(1);
+		}
 	}
 
 }

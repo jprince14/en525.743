@@ -16,7 +16,7 @@ void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder)
 
 void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder, struct udp_socket* inputsocket) {
 
-	if (dsp->buffercounter > (10000)) {
+	if (dsp->buffercounter > (dsp->buffermax)) {
 //		printf("dsp->buffercounter = %d\n", dsp->buffercounter);
 
 		lame_encoder->mp3buffsize = lame_encode_buffer_ieee_float(lame_encoder->lame, dsp->buf_resamp, dsp->buf_resamp,
