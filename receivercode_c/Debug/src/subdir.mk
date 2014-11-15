@@ -8,6 +8,7 @@ C_SRCS += \
 ../src/demod.c \
 ../src/encoder.c \
 ../src/receivercode_c.c \
+../src/sdr.c \
 ../src/tcpsocket.c \
 ../src/udpsocket.c 
 
@@ -16,6 +17,7 @@ OBJS += \
 ./src/demod.o \
 ./src/encoder.o \
 ./src/receivercode_c.o \
+./src/sdr.o \
 ./src/tcpsocket.o \
 ./src/udpsocket.o 
 
@@ -24,6 +26,7 @@ C_DEPS += \
 ./src/demod.d \
 ./src/encoder.d \
 ./src/receivercode_c.d \
+./src/sdr.d \
 ./src/tcpsocket.d \
 ./src/udpsocket.d 
 

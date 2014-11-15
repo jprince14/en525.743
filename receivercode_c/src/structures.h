@@ -10,6 +10,8 @@
 #include <alsa/asoundlib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <rtl-sdr.h>
+
 
 #define mono_FM 0
 #define stereo_FM 1
@@ -116,6 +118,21 @@ struct udp_socket {
 struct audiostruct {
 	snd_pcm_t *playback_handle;
 	snd_pcm_hw_params_t *hw_params;
+};
+
+
+struct rtlsdrstruct
+{
+// the librtlsdr device object and the index used to look it up
+rtlsdr_dev_t * device;
+int device_index;
+// called whenever samples are received from the RTL
+//rtl_execute_callback execute_callback;
+//void * execute_ctx;
+// buffer for samples received from the RTL
+int8_t buffer[10000];
+int buffer_len;
+uint32_t sample_rate;
 };
 
 #endif
