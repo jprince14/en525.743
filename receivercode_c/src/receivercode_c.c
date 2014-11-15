@@ -7,12 +7,13 @@
 #define debug 1 //1  = debug mode, 0 = normal mode
 #endif
 
+#include "sdr.h"
+#include "audio.h"
 #include "tcpsocket.h"
 #include "udpsocket.h"
 #include "demod.h"
 #include "encoder.h"
 #include "structures.h"
-
 #include <pthread.h>
 
 #include <rtl-sdr.h>
@@ -48,7 +49,7 @@ void* menufunction(void* ptr) {
 			printf("Enter the desired tuning frequency (in Hz)\n");
 			uint32_t freq;
 			scanf("%d", &freq);
-			set_freq(sdr_control->socketstruct, freq);
+			tune_sdr(sdr_control->sdrstruct, freq);
 		}
 
 		// adjust sampling rate
@@ -57,7 +58,8 @@ void* menufunction(void* ptr) {
 			printf("Enter the desired sampling rate (in Hz)\n");
 			uint32_t samplingrate;
 			scanf("%d", &samplingrate);
-			set_sample_rate(sdr_control->socketstruct, samplingrate);
+
+			setsamplingrate_sdr(sdr_control->sdrstruct, samplingrate);
 		}
 		if (x == 3) {
 			int fmoption;
@@ -71,7 +73,7 @@ void* menufunction(void* ptr) {
 					printf("Enter the desired tuning frequency (in Hz)\n");
 					uint32_t freq;
 					scanf("%d", &freq);
-					set_freq(sdr_control->socketstruct, freq);
+					tune_sdr(sdr_control->sdrstruct, freq);
 					sdr_control->demodstruct->demodtype = mono_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
@@ -82,7 +84,7 @@ void* menufunction(void* ptr) {
 					printf("Enter the desired tuning frequency (in Hz)\n");
 					uint32_t freq;
 					scanf("%d", &freq);
-					set_freq(sdr_control->socketstruct, freq);
+					tune_sdr(sdr_control->sdrstruct, freq);
 					sdr_control->demodstruct->demodtype = stereo_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
@@ -93,7 +95,7 @@ void* menufunction(void* ptr) {
 					int cbchannel;
 					printf("Select CB Radio Channel - select 1 - 40\n");
 					scanf("%d", &cbchannel);
-					set_cb_freq(sdr_control->socketstruct, cbchannel);
+					set_cb_freq_sdr(sdr_control->sdrstruct, cbchannel);
 
 					sdr_control->demodstruct->demodtype = cb_AM;
 					sdr_control->demodstruct->buffercounter = 0;
@@ -106,14 +108,14 @@ void* menufunction(void* ptr) {
 			int cbchannel;
 			printf("Select CB Radio Channel - select 1 - 40\n");
 			scanf("%d", &cbchannel);
-			set_cb_freq(sdr_control->socketstruct, cbchannel);
+			set_cb_freq_sdr(sdr_control->sdrstruct, cbchannel);
 		}
 
 		//Exit
 		if (x == 9) {
 
 			printf("Exit signal received\n");
-			sdr_control->socketstruct->receiverexitflag = true;
+			sdr_control->sdrstruct->receiverexitflag = true;
 			break;
 		}
 
@@ -132,55 +134,57 @@ int main(int argc, char**argv) {
 
 	pthread_t menuthread;
 
-	struct tcp_socket* rtlsdr;
-	rtlsdr = malloc(sizeof(struct tcp_socket));
+	struct rtlsdrstruct* rtlsdr;
+	rtlsdr = malloc(sizeof(struct rtlsdrstruct));
+
 	struct liquidobjects* processingstruct;
 	processingstruct = malloc(sizeof(struct liquidobjects));
+
 	struct encoder* mp3encoder;
 	mp3encoder = malloc(sizeof(struct encoder));
+
 	struct udp_socket* mp3transmitter;
 	mp3transmitter = malloc(sizeof(struct udp_socket));
 
-	struct audiostruct* alsastruct;
-	alsastruct = malloc(sizeof(struct audiostruct));
-
-
+	struct audiostruct* alsaobject;
+	alsaobject = malloc(sizeof(struct audiostruct));
 
 //Initialize the control structure
 	struct control* controlstruct;
 	controlstruct = malloc(sizeof(struct control));
 	controlstruct->demodstruct = processingstruct;
-	controlstruct->socketstruct = rtlsdr;
+	controlstruct->sdrstruct = rtlsdr;
 
-	tcp_setaddress(rtlsdr, "127.0.0.1");
-	tcp_setport(rtlsdr, 1234);
+//	tcp_setaddress(rtlsdr, "127.0.0.1");
+//	tcp_setport(rtlsdr, 1234);
 	udp_setaddress(mp3transmitter, "127.0.0.10");
 	udp_setport(mp3transmitter, 5678);
 	udp_createsocket(mp3transmitter);
 
 	rtlsdr->receiverexitflag = false;
-	tcp_createsocket(rtlsdr);
+//	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
 	initialize_encoder(processingstruct, mp3encoder);
-	initializecurl(mp3encoder);
+//	initializecurl(mp3encoder);
 
-	initializeaudio(alsastruct);
+	initializeaudio(alsaobject);
 
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
+	rtlsdr->filewrite = fopen("sdroutput.bin", "wb");
 
-	if (tcp_opensocket(rtlsdr) == 0) {
+	if (opensdr(rtlsdr) == true) {
 //		if (ipenudpsocker == 0) {
 		if (pthread_create(&menuthread, NULL, menufunction, controlstruct) == 0) {
 
 			while (rtlsdr->receiverexitflag == false) {
-				tcp_receive(rtlsdr);
+				sdr_work(rtlsdr);
 				demod_work(rtlsdr, processingstruct);
-				playaudio(processingstruct, alsastruct);
+				playaudio(processingstruct, alsaobject);
 
 				encoder_work(processingstruct, mp3encoder, mp3transmitter);
 			}
-			encoder_flush(rtlsdr, processingstruct);
+			encoder_flush(processingstruct, mp3encoder);
 
 			pthread_join(menuthread, NULL);
 
@@ -197,13 +201,13 @@ int main(int argc, char**argv) {
 	}
 
 	//clean up
-	tcp_closesocket(rtlsdr);
+	closesdr(rtlsdr);
 	demod_close(processingstruct);
 	close_encoderojects(mp3encoder);
 	fclose(processingstruct->fid_demod);
 	fclose(mp3encoder->outfile);
-	closeaudio(alsastruct);
-	free(alsastruct);
+	closeaudio(alsaobject);
+	free(alsaobject);
 	free(controlstruct);
 	free(rtlsdr);
 	free(processingstruct);

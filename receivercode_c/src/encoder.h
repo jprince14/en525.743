@@ -18,9 +18,9 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder, struc
 
 void encoder_flush(struct liquidobjects* dsp, struct encoder* lame_encoder);
 
-static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream);
+//static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream);
 
-void initializecurl(struct encoder* encoder);
+//void initializecurl(struct encoder* encoder);
 
 void close_encoderojects(struct encoder* lame_encoder);
 

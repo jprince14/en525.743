@@ -1,6 +1,6 @@
 #include "demod.h"
 
-void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
+void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 	int _I;
 	int _Q;
 	int x;
@@ -11,12 +11,12 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 		_Q = rtl->buffer[((2 * x) + 1)];
 
 		// convert to float complex type
-		float complex x = (float) (_I - 127.0) / 128.0f + (float) (_Q - 127.0) / 128.0f * _Complex_I;
+		float complex x_complex = (float) (_I - 127.0) / 128.0f + (float) (_Q - 127.0) / 128.0f * _Complex_I;
 
 		if (dsp->demodtype == mono_FM) {
 			// filter result
 			float complex y = 0;
-			iirfilt_crcf_execute(dsp->fm_filter, x, &y);
+			iirfilt_crcf_execute(dsp->fm_filter, x_complex, &y);
 
 			// run frequency demodulation
 			freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
@@ -30,17 +30,16 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 
 //		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
-//		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 			dsp->buffercounter += (dsp->nw_resamp);
 		}
 
-		if (dsp->demodtype == stereo_FM) {
+		else if (dsp->demodtype == stereo_FM) {
 #warning - come back here
-		}
-		if (dsp->demodtype == cb_AM) {
+		} else if (dsp->demodtype == cb_AM) {
 			float complex y_AM = 0;
 
-			iirfilt_crcf_execute(dsp->am_filter, x, &y_AM);
+			iirfilt_crcf_execute(dsp->am_filter, x_complex, &y_AM);
 
 			ampmodem_demodulate(dsp->ampdemod, y_AM, dsp->buf_demod);
 
@@ -53,6 +52,8 @@ void demod_work(struct tcp_socket* rtl, struct liquidobjects* dsp) {
 		}
 
 	}
+	dsp->copy_buffcounter = dsp->buffercounter;
+	dsp->buffercounter = 0;
 }
 
 void initialize_dspobjects(struct liquidobjects* dsp) {

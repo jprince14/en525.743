@@ -80,7 +80,8 @@ struct liquidobjects {
 	freqdem fdem;
 	ampmodem ampdemod;
 	float buf_resamp[8192 * 20];    // resampler output buffer
-	float buf_demod[10];     // demodulator output buffer
+//	float complex complexbuffer[5120];
+	float buf_demod[1000];     // demodulator output buffer
 	unsigned int nw_resamp;
 	unsigned int buffercounter;
 	float sample_rate_rf; // input sample rate from RTL SDR
@@ -90,6 +91,7 @@ struct liquidobjects {
 	FILE * fid_demod; //This file is only for testing purposes to write output to a file
 	int demodtype;
 	int buffermax;
+	int copy_buffcounter;
 };
 
 struct command {
@@ -106,7 +108,7 @@ struct tcp_socket {
 };
 
 struct control {
-	struct tcp_socket* socketstruct;
+	struct rtlsdrstruct* sdrstruct;
 	struct liquidobjects* demodstruct;
 };
 
@@ -130,9 +132,12 @@ int device_index;
 //rtl_execute_callback execute_callback;
 //void * execute_ctx;
 // buffer for samples received from the RTL
-int8_t buffer[10000];
-int buffer_len;
+uint8_t buffer[10000];
+int receivesize;
 uint32_t sample_rate;
+bool receiverexitflag;
+FILE * filewrite; //This file is only for testing purposes to write output to a file
+
 };
 
 #endif
