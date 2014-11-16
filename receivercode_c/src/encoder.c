@@ -19,7 +19,7 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder, struc
 //		printf("dsp->buffercounter = %d\n", dsp->buffercounter);
 
 	lame_encoder->mp3buffsize = lame_encode_buffer_ieee_float(lame_encoder->lame, dsp->buf_resamp, dsp->buf_resamp,
-			dsp->copy_buffcounter, lame_encoder->mp3_buffer, 21 * 8192);
+			dsp->copy_buffcounter, lame_encoder->mp3_buffer, 10 * 8192);
 
 	fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
 

@@ -30,7 +30,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 
 //		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
-		fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 			dsp->buffercounter += (dsp->nw_resamp);
 		}
 
@@ -98,8 +98,6 @@ void initialize_dspobjects(struct liquidobjects* dsp) {
 	liquid_ampmodem_type type = LIQUID_AMPMODEM_DSB;
 	int suppressed_carrier = 0;     // suppress the carrier?
 	dsp->ampdemod = ampmodem_create(mod_index, fc, type, suppressed_carrier);
-
-	dsp->buffermax = 5000;
 
 }
 

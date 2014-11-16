@@ -90,7 +90,6 @@ struct liquidobjects {
 	float AM_cutoff_freq_rf;
 	FILE * fid_demod; //This file is only for testing purposes to write output to a file
 	int demodtype;
-	int buffermax;
 	int copy_buffcounter;
 };
 
@@ -101,15 +100,19 @@ struct command {
 
 struct tcp_socket {
 	struct sockaddr_in servaddr;
+	struct sockaddr_in cli_addr;
 	int sockfd;
 	bool receiverexitflag;
-	uint8_t buffer[1000];
 	int receivesize;
+    socklen_t clilen;
+    int newsockfd;
+    uint32_t receivebuffer[100];
 };
 
 struct control {
 	struct rtlsdrstruct* sdrstruct;
 	struct liquidobjects* demodstruct;
+	struct tcp_socket* controlsocket;
 };
 
 struct udp_socket {
@@ -120,6 +123,9 @@ struct udp_socket {
 struct audiostruct {
 	snd_pcm_t *playback_handle;
 	snd_pcm_hw_params_t *hw_params;
+	int audiobuffer_size;
+	int minaudiobuffersize;
+	float audiobuffer[500];
 };
 
 

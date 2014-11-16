@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lc -lm -lliquid -lpthread -lrtlsdr -lmp3lame -lcurl -lasound
+LIBS := -lm -lc -lliquid -lcurl -lrtlsdr -lmp3lame -lasound -lpthread
 

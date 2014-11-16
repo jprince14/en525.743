@@ -18,7 +18,12 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.277213011." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.810894052" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.596218037" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder buildPath="${workspace_loc:/receivercode_c}/Debug" id="cdt.managedbuild.builder.gnu.cross.1827403223" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<builder buildPath="${workspace_loc:/receivercode_c}/Debug" id="cdt.managedbuild.builder.gnu.cross.1827403223" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Release"/>
+								</outputEntries>
+							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.732263525" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1065580734" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.53964310" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
@@ -30,14 +35,14 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1847413454" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option id="gnu.c.link.option.libs.457254690" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="c"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="m"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="c"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="liquid"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="curl"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="rtlsdr"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="mp3lame"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="curl"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="asound"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1625037697" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -51,9 +56,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
-					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -91,6 +93,11 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="mp3lame"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="shoutcast"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="asound"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="lc"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="m"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="liquid"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="curl"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.500509799" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -105,7 +112,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

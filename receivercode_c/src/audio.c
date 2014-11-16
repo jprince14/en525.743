@@ -52,18 +52,30 @@ void initializeaudio(struct audiostruct* alsa) {
 		exit(1);
 	}
 
+	alsa->audiobuffer_size = 0;
+	alsa->minaudiobuffersize = 50;
 }
 
 void playaudio(struct liquidobjects* dsp, struct audiostruct* alsa) {
 	int err;
-	if (dsp->buffercounter > (dsp->buffermax)) {
+	printf("dsp->copy_buffcounter = %d\n", dsp->copy_buffcounter);
+	printf("alsa->audiobuffer_size = %d\n", alsa->audiobuffer_size);
 
-		if ((err = snd_pcm_writei(alsa->playback_handle, dsp->buf_resamp, dsp->buffercounter)) != dsp->buffercounter) {
-			fprintf(stderr, "write to audio interface failed (%s)\n", snd_strerror(err));
-			exit(1);
+	if (alsa->audiobuffer_size > alsa->minaudiobuffersize) {
+
+		if ((err = snd_pcm_writei(alsa->playback_handle, alsa->audiobuffer, alsa->audiobuffer_size))
+				!= dsp->copy_buffcounter) {
+			fprintf(stderr, "error %d - write to audio interface failed (%s)\n", err, snd_strerror(err));
+//			exit(1);
 		}
-	}
+		snd_pcm_drain(alsa->playback_handle);
+		alsa->audiobuffer_size = 0;
 
+	} else {
+
+		memcpy(alsa->audiobuffer + alsa->audiobuffer_size, dsp->buf_resamp, dsp->copy_buffcounter* sizeof(float) );
+		alsa->audiobuffer_size += dsp->copy_buffcounter;
+	}
 }
 
 void closeaudio(struct audiostruct* alsa) {
