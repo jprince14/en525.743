@@ -21,6 +21,7 @@ public:
 
     struct sockaddr_in servaddr;
     int sockfd;
+    bool socketwasopenflag;
 
     void assignipaddr(std::string);
     void assignport(int port);

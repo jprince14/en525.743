@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = sdr_client
 TEMPLATE = app
-LIBS += -pthread -asound -mp3lame
+LIBS += -lpthread -lasound -lmp3lame
 
 SOURCES += main.cpp\
         mainwindow.cpp \

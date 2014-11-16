@@ -18,7 +18,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void enableall(bool );
+    void enableall(bool,bool );
     std::tcpsocket* controlsocket;
     std::udpsocket* datasocket;
     void initialize_open_udp_socket(std::udpsocket* );

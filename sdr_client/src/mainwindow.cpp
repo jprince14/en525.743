@@ -3,12 +3,11 @@
 #include "tcpclient.hpp"
 
 MainWindow::MainWindow(QWidget *parent) :
-		QMainWindow(parent), ui(new Ui::MainWindow),
-		recordmp3(false), playaudio(false) {
+		QMainWindow(parent), ui(new Ui::MainWindow), recordmp3(false), playaudio(false) {
 
 	ui->setupUi(this);
 
-	enableall(false);
+	enableall(false, true);
 
 	controlsocket = new std::tcpsocket;
 	datasocket = new std::udpsocket;
@@ -21,7 +20,7 @@ MainWindow::~MainWindow() {
 	delete controlsocket;
 }
 
-void MainWindow::enableall(bool flag) {
+void MainWindow::enableall(bool flag, bool startup) {
 	ui->beaglebone_ip->setEnabled(flag);
 	ui->beaglebone_port->setEnabled(flag);
 	ui->CB_channel_box->setEnabled(flag);
@@ -41,20 +40,23 @@ void MainWindow::enableall(bool flag) {
 	ui->data_port_label->setEnabled(flag);
 	ui->beaglebone_data_port->setEnabled(flag);
 
-	if (flag == true) {
+	if (startup == false) {
+		if (flag == true) {
 
-		initialize_open_tcp_socket(controlsocket);
-		initialize_open_udp_socket(datasocket);
-	}
+			initialize_open_tcp_socket(controlsocket);
+			initialize_open_udp_socket(datasocket);
+		}
 
-	else if (flag == false) {
-		datasocket->closesocket();
-		controlsocket->closesocket();
+		else if (flag == false) {
+			datasocket->closesocket();
+			controlsocket->closesocket();
+		}
 	}
 }
 
 void MainWindow::on_Enable_receiver_clicked() {
-	enableall(ui->Enable_receiver->isChecked());
+//	printf("on_Enable_receiver_clicked was run\n");
+	enableall(ui->Enable_receiver->isChecked(), false);
 }
 
 void MainWindow::initialize_open_tcp_socket(std::tcpsocket* socket) {
@@ -68,6 +70,8 @@ void MainWindow::initialize_open_tcp_socket(std::tcpsocket* socket) {
 }
 
 void MainWindow::initialize_open_udp_socket(std::udpsocket* socket) {
+//	printf("initialize_open_udp_socket was run\n");
+
 	socket->assignipaddr(ui->beaglebone_ip->text().toStdString());
 	socket->assignport(ui->beaglebone_data_port->text().toInt());
 	socket->createsocket();
@@ -77,6 +81,8 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* socket) {
 }
 
 void MainWindow::on_beaglebone_ip_editingFinished() {
+//	printf("on_beaglebone_ip_editingFinished was run\n");
+
 	controlsocket->closesocket();
 	datasocket->closesocket();
 	initialize_open_tcp_socket(controlsocket);
