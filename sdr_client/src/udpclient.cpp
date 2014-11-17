@@ -3,7 +3,7 @@
 namespace std {
 
 udpsocket::udpsocket() :
-		socketwasopenflag(false) {
+		socketwasopenflag(false), runningflag(false) {
 	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
@@ -24,10 +24,13 @@ void udpsocket::createsocket() {
 }
 
 void udpsocket::closesocket() {
-	printf("udpclosesocket was run\n");
+
+	runningflag = false;
+
 	if (socketwasopenflag == true) {
 		close(sockfd);
 	}
+	socketwasopenflag = false;
 }
 
 bool udpsocket::opensocket() {
@@ -41,14 +44,24 @@ bool udpsocket::opensocket() {
 
 }
 
-int udpsocket::receive(char* passedinbuffer) {
+int udpsocket::receive(float* passedinbuffer) {
 	socklen_t fromlen = sizeof(servaddr);
 
 	int length = recvfrom(sockfd, (char*) &receivebuffer, 1500 * sizeof(float), 0, (struct sockaddr *) &servaddr,
 			&fromlen);
 
-	return 0;
+	printf("length = %d\n", length);
+
+	return length;
 }
+
+void udpsocket::Setrunningflag(bool input){
+	runningflag = input;
+}
+bool udpsocket::Getrunningflag(){
+	return runningflag;
+}
+
 
 udpsocket::~udpsocket() {
 // TODO Auto-generated destructor stub

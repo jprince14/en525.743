@@ -3,7 +3,7 @@
 namespace std {
 
 tcpsocket::tcpsocket() :
-		socketwasopenflag(false) {
+		socketwasopenflag(false), runningflag(false) {
 	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
@@ -30,9 +30,14 @@ void tcpsocket::createsocket() {
 
 void tcpsocket::closesocket() {
 	printf("tcpclosesocket was run\n");
+
+	runningflag = false;
+
 	if (socketwasopenflag == true) {
 		close(sockfd);
 	}
+	socketwasopenflag = false;
+
 
 }
 
@@ -42,18 +47,34 @@ bool tcpsocket::opensocket() {
 		//Success opening socket
 		returnFlag = true;
 	}
+	socketwasopenflag = true;
+
 	return returnFlag;
 
 }
 
 int tcpsocket::receive(char* passedinbuffer) {
 
-	return 0;
+//	int recv_size = 0;
+//	recv_size = recvfrom()
+//
+//	return recv_size;
 }
+
+void tcpsocket::Setrunningflag(bool input){
+	runningflag = input;
+}
+bool tcpsocket::Getrunningflag(){
+	return runningflag;
+}
+
 
 tcpsocket::~tcpsocket() {
 // TODO Auto-generated destructor stub
 
 }
+
+
+
 
 } /* namespace std */

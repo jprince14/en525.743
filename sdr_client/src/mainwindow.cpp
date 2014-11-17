@@ -3,7 +3,9 @@
 #include "tcpclient.hpp"
 
 MainWindow::MainWindow(QWidget *parent) :
-		QMainWindow(parent), ui(new Ui::MainWindow), recordmp3(false), playaudio(false) {
+		QMainWindow(parent), ui(new Ui::MainWindow) {
+	recordmp3 = false;
+	playaudio = false;
 
 	ui->setupUi(this);
 
@@ -65,8 +67,6 @@ void MainWindow::initialize_open_tcp_socket(std::tcpsocket* socket) {
 	socket->createsocket();
 	socket->opensocket();
 
-#warning - start receive thread from here
-
 }
 
 void MainWindow::initialize_open_udp_socket(std::udpsocket* socket) {
@@ -76,6 +76,13 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* socket) {
 	socket->assignport(ui->beaglebone_data_port->text().toInt());
 	socket->createsocket();
 	socket->opensocket();
+
+	//kickoff receive and process thread
+	if (pthread_create(&receive_pthread, NULL, receivethread, this) != 0) {
+
+		printf("Error creating UDP thread\n");
+	}
+
 #warning - start receive thread from here and from receive thread then kick off writng to mp3 and/or play audio
 
 }
@@ -137,21 +144,31 @@ void MainWindow::on_mp3_location_editingFinished() {
 
 void MainWindow::on_enable_speakers_clicked(bool checked) {
 	if (checked == true) {
-		//set flag to true
+
+		Setaudioflag(true);
+#warning - first initialize speakers
 
 	} else if (checked == false) {
-		//set flag to false
+
+		//close down speakers
+
+		Setaudioflag(false);
 
 	}
 }
 
 void MainWindow::on_enable_recording_clicked(bool checked) {
+
 	if (checked == true) {
-		//open file and then set flag for receive thread to record data
+
+		Setmp3flag(true);
+#warning - first initialize file
 
 	} else if (checked == false) {
-		//check if file is open and if so close it
-		//set flag to false
+
+		//close down file
+
+		Setmp3flag(false);
 
 	}
 }
@@ -161,4 +178,48 @@ void MainWindow::on_beaglebone_data_port_editingFinished() {
 	datasocket->closesocket();
 	initialize_open_tcp_socket(controlsocket);
 	initialize_open_udp_socket(datasocket);
+}
+
+void* MainWindow::receivethread(void *ptr) {
+	MainWindow* input = (MainWindow*) ptr;
+
+	input->datasocket->Setrunningflag(true);
+
+	while (input->datasocket->Getrunningflag() == true) {
+		input->datasocket->receive(input->datasocket->receivebuffer);
+		if (input->Getaudioflag() == true) {
+			//send sound to speakers
+		}
+		if (input->Getmp3flag() == true) {
+
+			//write to mp3
+		}
+
+	}
+
+	return NULL;
+}
+
+void* MainWindow::testthread(void *x_void_ptr) {
+
+	/* increment x to 100 */
+	int *x_ptr = (int *) x_void_ptr;
+
+	printf("testthread was created, tc %d\n", *x_ptr);
+
+	return NULL;
+}
+
+bool MainWindow::Getaudioflag() {
+	return playaudio;
+}
+void MainWindow::Setaudioflag(bool input) {
+	playaudio = input;
+}
+
+bool MainWindow::Getmp3flag() {
+	return recordmp3;
+}
+void MainWindow::Setmp3flag(bool input) {
+	recordmp3 = input;
 }

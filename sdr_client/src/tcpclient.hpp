@@ -27,13 +27,15 @@ public:
     void assignport(int port);
     void createsocket();
     bool opensocket();
-
+	void Setrunningflag(bool);
+	bool Getrunningflag();
     int receive(char*);
     void closesocket();
 
 
-
     virtual ~tcpsocket();
+private:
+    bool runningflag;
 
 };
 
