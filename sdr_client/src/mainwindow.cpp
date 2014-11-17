@@ -89,7 +89,8 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* socket) {
 
 void MainWindow::on_beaglebone_ip_editingFinished() {
 //	printf("on_beaglebone_ip_editingFinished was run\n");
-
+	controlsocket->Setrunningflag(false);
+	datasocket->Setrunningflag(false);
 	controlsocket->closesocket();
 	datasocket->closesocket();
 	initialize_open_tcp_socket(controlsocket);
@@ -98,6 +99,7 @@ void MainWindow::on_beaglebone_ip_editingFinished() {
 }
 
 void MainWindow::on_beaglebone_port_editingFinished() {
+
 	controlsocket->closesocket();
 	datasocket->closesocket();
 	initialize_open_tcp_socket(controlsocket);
@@ -161,12 +163,14 @@ void MainWindow::on_enable_recording_clicked(bool checked) {
 
 	if (checked == true) {
 
+		mp3file = fopen("fmdemod_demod.bin", "wb");
+
 		Setmp3flag(true);
-#warning - first initialize file
 
 	} else if (checked == false) {
 
 		//close down file
+		fclose(mp3file);
 
 		Setmp3flag(false);
 
@@ -183,29 +187,25 @@ void MainWindow::on_beaglebone_data_port_editingFinished() {
 void* MainWindow::receivethread(void *ptr) {
 	MainWindow* input = (MainWindow*) ptr;
 
-	input->datasocket->Setrunningflag(true);
+	printf("thread was opened\n");
 
+	input->datasocket->Setrunningflag(true);
+	int rcv_length;
 	while (input->datasocket->Getrunningflag() == true) {
-		input->datasocket->receive(input->datasocket->receivebuffer);
+		rcv_length = input->datasocket->receive(input->datasocket->receivebuffer);
 		if (input->Getaudioflag() == true) {
 			//send sound to speakers
 		}
 		if (input->Getmp3flag() == true) {
 
+			if (rcv_length > 0){
+			printf("length = %d\n", rcv_length);}
+			fwrite(input->datasocket->receivebuffer, 1, rcv_length, input->mp3file);
+
 			//write to mp3
 		}
 
 	}
-
-	return NULL;
-}
-
-void* MainWindow::testthread(void *x_void_ptr) {
-
-	/* increment x to 100 */
-	int *x_ptr = (int *) x_void_ptr;
-
-	printf("testthread was created, tc %d\n", *x_ptr);
 
 	return NULL;
 }

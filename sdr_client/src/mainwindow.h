@@ -24,7 +24,6 @@ public:
 	void initialize_open_tcp_socket(std::tcpsocket*);
 
 	static void* receivethread(void*);
-	static void* testthread(void *);
 
 	bool Getaudioflag();
 
@@ -32,6 +31,7 @@ public:
 	bool Getmp3flag();
 	void Setmp3flag(bool);
 
+	FILE* mp3file;
 
 	pthread_t receive_pthread;
 

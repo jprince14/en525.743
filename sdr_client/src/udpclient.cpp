@@ -36,8 +36,10 @@ void udpsocket::closesocket() {
 bool udpsocket::opensocket() {
 
 	bool returnFlag = false;
-	if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(struct sockaddr_in)) == 0) {
+	if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(struct sockaddr_in)) == 0) {
 		//Success opening socket
+		printf("UDP socket opened\n");
+
 		returnFlag = true;
 	}
 	return returnFlag;
