@@ -4,6 +4,8 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 	int _I;
 	int _Q;
 	int x;
+
+	//the filter can only take in one sample at a time
 	for (x = 0; x < (rtl->receivesize / 2); x++) {
 
 		_I = rtl->buffer[2 * x];
@@ -28,9 +30,8 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			msresamp_rrrf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter,
 					&dsp->nw_resamp);
 
-//		msresamp_crcf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter, &dsp->nw_resamp);
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
-			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+//			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 			dsp->buffercounter += (dsp->nw_resamp);
 		}
 
@@ -52,6 +53,10 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 		}
 
 	}
+	printf("buffercounter = %d\n", dsp->buffercounter);
+
+//	fwrite(dsp->buf_resamp, 1, sizeof(float) * dsp->buffercounter, dsp->fid_demod);
+
 	dsp->copy_buffcounter = dsp->buffercounter;
 	dsp->buffercounter = 0;
 }

@@ -17,7 +17,9 @@ void udp_setaddress(struct udp_socket* inputsocket, char* inputstring);
 void udp_setport(struct udp_socket* inputsocket, int port);
 void udp_createsocket(struct udp_socket* inputsocket);
 int udp_opensocket(struct udp_socket* inputsocket);
-void udp_senddata(struct udp_socket* inputsocket, struct encoder* lame);
+void udp_senddata_mp3(struct udp_socket* inputsocket, struct encoder* lame);
+void udp_senddata_float(struct udp_socket* inputsocket, struct liquidobjects* sdr) ;
+
 void udp_receive(struct udp_socket* inputsocket);
 void closeudpsocket(struct udp_socket* inputsocket);
 

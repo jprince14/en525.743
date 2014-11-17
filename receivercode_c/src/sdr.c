@@ -36,14 +36,14 @@ void setsamplingrate_sdr(struct rtlsdrstruct* sdr, uint32_t freq) {
 }
 
 void sdr_work(struct rtlsdrstruct* sdr) {
-	int x = rtlsdr_read_sync(sdr->device, sdr->buffer, 1024, &sdr->receivesize);
+	int x = rtlsdr_read_sync(sdr->device, sdr->buffer, 10*1024, &sdr->receivesize);
 	if (x < 0) {
 		printf("Samples read: %d\n",sdr->receivesize);
 		printf("Error reading from SDR\n");
 		exit(0);
 	}
 //	rtlsdr_read_async(sdr->device, rtlsdr_callback, s, 0, s->buf_len);
-//	printf("x = %d\n", x);
+	printf("Samples read: %d\n",sdr->receivesize);
 
 //	printf("sdr->receivesize = %d\n", sdr->receivesize);
 	fwrite(sdr->buffer, sizeof(uint8_t), sdr->receivesize, sdr->filewrite);

@@ -22,10 +22,23 @@ int udp_opensocket(struct udp_socket* inputsocket) {
 	return returnFlag;
 }
 
-void udp_senddata(struct udp_socket* inputsocket, struct encoder* lame) {
+void udp_senddata_mp3(struct udp_socket* inputsocket, struct encoder* lame) {
 //	send(inputsocket->sockfd, (const char*) &lame->mp3_buffer, lame->mp3buffsize, 0);
-    sendto(inputsocket->sockfd,(const char*) &lame->mp3_buffer, lame->mp3buffsize, 0,
-           (struct sockaddr *)&inputsocket->servaddr,sizeof(inputsocket->servaddr));
+	sendto(inputsocket->sockfd, (const char*) &lame->mp3_buffer, lame->mp3buffsize, 0,
+			(struct sockaddr *) &inputsocket->servaddr, sizeof(inputsocket->servaddr));
+
+//	fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
+
+}
+
+void udp_senddata_float(struct udp_socket* inputsocket, struct liquidobjects* sdr) {
+//	send(inputsocket->sockfd, (const char*) &lame->mp3_buffer, lame->mp3buffsize, 0);
+
+//	sendto(inputsocket->sockfd, "TEST SEND", 9, 0,
+//			(struct sockaddr *) &inputsocket->servaddr, sizeof(inputsocket->servaddr));
+	printf("sdr->buffercounter = %d\n", sdr->copy_buffcounter);
+	sendto(inputsocket->sockfd, sdr->buf_resamp, sizeof(float) * sdr->copy_buffcounter, 0,
+			(struct sockaddr *) &inputsocket->servaddr, sizeof(inputsocket->servaddr));
 
 //	fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
 

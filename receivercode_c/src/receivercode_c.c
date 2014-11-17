@@ -33,7 +33,8 @@
 void* c2_socketcontrol(void* ptr) {
 	struct control* sdr_control = (struct control*) ptr;
 	while (sdr_control->sdrstruct->receiverexitflag == false) {
-		printf("receive loop\n");
+//		printf("receive loop\n");
+#warning - this is causing an error
 //		tcp_listen(sdr_control->controlsocket, sdr_control->sdrstruct, sdr_control->demodstruct);
 	}
 
@@ -157,8 +158,8 @@ int main(int argc, char**argv) {
 	struct encoder* mp3encoder;
 	mp3encoder = malloc(sizeof(struct encoder));
 
-	struct udp_socket* mp3transmitter;
-	mp3transmitter = malloc(sizeof(struct udp_socket));
+	struct udp_socket* transmitter_socket;
+	transmitter_socket = malloc(sizeof(struct udp_socket));
 
 	struct audiostruct* alsaobject;
 	alsaobject = malloc(sizeof(struct audiostruct));
@@ -176,9 +177,9 @@ int main(int argc, char**argv) {
 	tcp_setaddress(c2socket, "127.0.0.1");
 	tcp_setport(c2socket, 1234);
 
-	udp_setaddress(mp3transmitter, "127.0.0.10");
-	udp_setport(mp3transmitter, 5678);
-	udp_createsocket(mp3transmitter);
+	udp_setaddress(transmitter_socket, "127.0.0.1");
+	udp_setport(transmitter_socket, 5678);
+	udp_createsocket(transmitter_socket);
 
 	rtlsdr->receiverexitflag = false;
 //	tcp_createsocket(rtlsdr);
@@ -199,9 +200,10 @@ int main(int argc, char**argv) {
 				while (rtlsdr->receiverexitflag == false) {
 					sdr_work(rtlsdr);
 					demod_work(rtlsdr, processingstruct);
-//				playaudio(processingstruct, alsaobject);
+					udp_senddata_float(transmitter_socket, processingstruct);
+//					playaudio(processingstruct, alsaobject);
 
-					encoder_work(processingstruct, mp3encoder, mp3transmitter);
+					encoder_work(processingstruct, mp3encoder);
 				}
 				encoder_flush(processingstruct, mp3encoder);
 
@@ -230,12 +232,14 @@ int main(int argc, char**argv) {
 	close_encoderojects(mp3encoder);
 	fclose(processingstruct->fid_demod);
 	fclose(mp3encoder->outfile);
+	closeudpsocket(transmitter_socket);
 	closeaudio(alsaobject);
 	free(alsaobject);
 	free(controlstruct);
 	free(rtlsdr);
 	free(processingstruct);
 	free(mp3encoder);
+	free(transmitter_socket);
 
 	return 0;
 }

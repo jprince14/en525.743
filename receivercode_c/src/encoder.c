@@ -13,7 +13,7 @@ void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder)
 	lame_init_params(lame_encoder->lame);
 }
 
-void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder, struct udp_socket* inputsocket) {
+void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 
 //	if (dsp->buffercounter > (dsp->buffermax)) {
 //		printf("dsp->buffercounter = %d\n", dsp->buffercounter);

@@ -138,7 +138,7 @@ int device_index;
 //rtl_execute_callback execute_callback;
 //void * execute_ctx;
 // buffer for samples received from the RTL
-uint8_t buffer[10000];
+uint8_t buffer[12*1024];
 int receivesize;
 uint32_t sample_rate;
 bool receiverexitflag;
