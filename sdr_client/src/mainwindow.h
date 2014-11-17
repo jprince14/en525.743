@@ -5,6 +5,9 @@
 #include "tcpclient.hpp"
 #include "udpclient.hpp"
 #include <pthread.h>
+#include <string.h>
+#include <string>
+#include <lame/lame.h>
 
 namespace Ui {
 class MainWindow;
@@ -24,7 +27,7 @@ public:
 	void initialize_open_tcp_socket(std::tcpsocket*);
 
 	static void* receivethread(void*);
-
+	bool socketconnectflag;
 	bool Getaudioflag();
 
 	void Setaudioflag(bool);
@@ -33,14 +36,19 @@ public:
 	pthread_mutex_t audiolock;
 	pthread_mutex_t mp3lock;
 
+	unsigned char mp3buffer[10240];
+	lame_t lame;
+	int mp3buffsize;
 	FILE* mp3file;
 
 	pthread_t receive_pthread;
 
-
-
+	void recordmp3_initialize();
+	void recordmp3_close();
+	void recordmp3_work(float*, int, FILE*);
 
 private slots:
+
 	void on_Enable_receiver_clicked();
 
 	void on_beaglebone_ip_editingFinished();
@@ -65,6 +73,7 @@ private:
 	Ui::MainWindow *ui;
 	bool recordmp3;
 	bool playaudio;
-};
+}
+;
 
 #endif // MAINWINDOW_H

@@ -73,7 +73,7 @@ void MainWindow::initialize_open_tcp_socket(std::tcpsocket* socket) {
 	socket->assignipaddr(ui->beaglebone_ip->text().toStdString());
 	socket->assignport(ui->beaglebone_port->text().toInt());
 	socket->createsocket();
-	socket->opensocket();
+	socketconnectflag = socket->opensocket();
 
 }
 
@@ -130,8 +130,11 @@ void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
 		chmod_cmd.param = 0;
 	}
 
-	controlsocket->sendcommand(chmod_cmd);
-
+	if (socketconnectflag == true) {
+		controlsocket->sendcommand(chmod_cmd);
+	} else {
+		printf("Not connected to TCP socket yet\n");
+	}
 }
 
 void MainWindow::on_fm_freq_BOX_editingFinished()
@@ -144,7 +147,12 @@ void MainWindow::on_fm_freq_BOX_editingFinished()
 		chfmfreq_cmd.cmd = 0;
 		chfmfreq_cmd.param = ui->fm_freq_BOX->text().toInt();
 
-		controlsocket->sendcommand(chfmfreq_cmd);
+		if (socketconnectflag == true) {
+			controlsocket->sendcommand(chfmfreq_cmd);
+		} else {
+			printf("Not connected to TCP socket yet\n");
+		}
+
 	}
 
 	//    arg1.toInt()
@@ -158,16 +166,28 @@ void MainWindow::on_CB_channel_box_editingFinished() {
 		chamfreq_cmd.cmd = 0;
 		chamfreq_cmd.param = ui->fm_freq_BOX->text().toInt();
 
-		controlsocket->sendcommand(chamfreq_cmd);
+		if (socketconnectflag == true) {
+			controlsocket->sendcommand(chamfreq_cmd);
+		} else {
+			printf("Not connected to TCP socket yet\n");
+		}
 
 	}
 
 }
 
 void MainWindow::on_mp3_location_editingFinished() {
-	//close old file then open new one
 
-//    arg1.toStdString().c_str();
+	if (Getmp3flag() == true) {
+		//this will close down the file recording currently in progress
+		on_enable_recording_clicked(false);
+
+		//this will start a new recording with the new filename
+		on_enable_recording_clicked(false);
+
+	} else {
+		//do nothing, the new parameters will take effect after the recording is initialized
+	}
 
 }
 
@@ -196,8 +216,8 @@ void MainWindow::on_enable_recording_clicked(bool checked) {
 
 	if (checked == true) {
 		pthread_mutex_lock(&mp3lock);
-
-		mp3file = fopen("fmdemod_demod.bin", "wb");
+		recordmp3_initialize();
+		mp3file = fopen(ui->mp3_location->text().toStdString().c_str(), "wb");
 
 		Setmp3flag(true);
 		pthread_mutex_unlock(&mp3lock);
@@ -206,9 +226,10 @@ void MainWindow::on_enable_recording_clicked(bool checked) {
 
 		pthread_mutex_lock(&mp3lock);
 
+		Setmp3flag(false);
+		recordmp3_close();
 		fclose(mp3file);
 
-		Setmp3flag(false);
 		pthread_mutex_unlock(&mp3lock);
 
 	}
@@ -240,12 +261,8 @@ void* MainWindow::receivethread(void *ptr) {
 		pthread_mutex_lock(&input->audiolock);
 		if (input->Getmp3flag() == true) {
 
-			if (rcv_length > 0) {
-				printf("length = %d\n", rcv_length);
-			}
-			fwrite(input->datasocket->receivebuffer, 1, rcv_length, input->mp3file);
+			recordmp3_work(input->datasocket->receivebuffer, rcv_length, input->mp3file);
 
-			//write to mp3
 		}
 		pthread_mutex_unlock(&input->audiolock);
 
@@ -266,4 +283,31 @@ bool MainWindow::Getmp3flag() {
 }
 void MainWindow::Setmp3flag(bool input) {
 	recordmp3 = input;
+}
+
+void MainWindow::recordmp3_initialize() {
+	lame = lame_init();
+	lame_set_in_samplerate(lame, (48000));
+	lame_set_VBR(lame, vbr_off); //sets cbr
+	lame_set_VBR_q(lame, 5); // 0 = best vbr q 5=~128k
+//	lame_set_out_samplerate(lame_encoder->lame, (dsp->sample_rate_audio));
+//	lame_set_num_channels(lame_encoder->lame, 1);
+//	lame_set_out_samplerate(lame_encoder->lame, 16000);
+	lame_init_params(lame);
+
+}
+
+void MainWindow::recordmp3_close() {
+
+	lame_encode_flush(lame, mp3buffer, 10240);
+	lame_close(lame);
+
+}
+
+void MainWindow::recordmp3_work(float* buffer, int length, FILE* mp3file) {
+
+	mp3buffsize = lame_encode_buffer_ieee_float(lame, buffer, buffer, length, mp3buffer, 10240);
+
+	fwrite(mp3buffer, 1, mp3buffsize, mp3file);
+
 }
