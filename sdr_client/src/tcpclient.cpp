@@ -38,7 +38,6 @@ void tcpsocket::closesocket() {
 	}
 	socketwasopenflag = false;
 
-
 }
 
 bool tcpsocket::opensocket() {
@@ -53,6 +52,11 @@ bool tcpsocket::opensocket() {
 
 }
 
+void tcpsocket::sendcommand(struct commandstructure command) {
+
+#warning - come back here
+}
+
 int tcpsocket::receive(char* passedinbuffer) {
 
 //	int recv_size = 0;
@@ -61,20 +65,16 @@ int tcpsocket::receive(char* passedinbuffer) {
 //	return recv_size;
 }
 
-void tcpsocket::Setrunningflag(bool input){
+void tcpsocket::Setrunningflag(bool input) {
 	runningflag = input;
 }
-bool tcpsocket::Getrunningflag(){
+bool tcpsocket::Getrunningflag() {
 	return runningflag;
 }
-
 
 tcpsocket::~tcpsocket() {
 // TODO Auto-generated destructor stub
 
 }
-
-
-
 
 } /* namespace std */

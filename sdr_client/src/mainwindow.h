@@ -30,12 +30,15 @@ public:
 	void Setaudioflag(bool);
 	bool Getmp3flag();
 	void Setmp3flag(bool);
+	pthread_mutex_t audiolock;
+	pthread_mutex_t mp3lock;
 
 	FILE* mp3file;
 
 	pthread_t receive_pthread;
 
-//	pthread_t command_pthread;
+
+
 
 private slots:
 	void on_Enable_receiver_clicked();

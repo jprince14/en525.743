@@ -14,12 +14,20 @@ MainWindow::MainWindow(QWidget *parent) :
 	controlsocket = new std::tcpsocket;
 	datasocket = new std::udpsocket;
 
+	if (pthread_mutex_init(&audiolock, NULL) != 0) {
+		printf("ERROR: Unable to open audiolock\n");
+	}
+	if (pthread_mutex_init(&mp3lock, NULL) != 0) {
+		printf("ERROR: Unable to open mp3lock\n");
+	}
+
 }
 
 MainWindow::~MainWindow() {
-	delete ui;
 	delete datasocket;
 	delete controlsocket;
+	delete ui;
+
 }
 
 void MainWindow::enableall(bool flag, bool startup) {
@@ -83,8 +91,6 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* socket) {
 		printf("Error creating UDP thread\n");
 	}
 
-#warning - start receive thread from here and from receive thread then kick off writng to mp3 and/or play audio
-
 }
 
 void MainWindow::on_beaglebone_ip_editingFinished() {
@@ -113,20 +119,33 @@ void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
 
 	//    send modulation type then send tune freq
 
+	struct commandstructure chmod_cmd;
+	chmod_cmd.cmd = 0;
+
 	if (index == 0) {
-
+		chmod_cmd.param = 0;
 	} else if (index == 1) {
-
+		chmod_cmd.param = 0;
 	} else if (index == 2) {
-
+		chmod_cmd.param = 0;
 	}
+
+	controlsocket->sendcommand(chmod_cmd);
 
 }
 
 void MainWindow::on_fm_freq_BOX_editingFinished()
 
 {
-	//first check if mod type is FM
+
+	//checking if modulation type if fm
+	if (ui->modulation_combobox->currentIndex() == 0 || ui->modulation_combobox->currentIndex() == 1) {
+		struct commandstructure chfmfreq_cmd;
+		chfmfreq_cmd.cmd = 0;
+		chfmfreq_cmd.param = ui->fm_freq_BOX->text().toInt();
+
+		controlsocket->sendcommand(chfmfreq_cmd);
+	}
 
 	//    arg1.toInt()
 }
@@ -134,6 +153,14 @@ void MainWindow::on_fm_freq_BOX_editingFinished()
 void MainWindow::on_CB_channel_box_editingFinished() {
 
 	//first check if mod type is AM
+	if (ui->modulation_combobox->currentIndex() == 2) {
+		struct commandstructure chamfreq_cmd;
+		chamfreq_cmd.cmd = 0;
+		chamfreq_cmd.param = ui->fm_freq_BOX->text().toInt();
+
+		controlsocket->sendcommand(chamfreq_cmd);
+
+	}
 
 }
 
@@ -146,15 +173,21 @@ void MainWindow::on_mp3_location_editingFinished() {
 
 void MainWindow::on_enable_speakers_clicked(bool checked) {
 	if (checked == true) {
+		pthread_mutex_lock(&audiolock);
 
 		Setaudioflag(true);
+
 #warning - first initialize speakers
 
+		pthread_mutex_unlock(&audiolock);
+
 	} else if (checked == false) {
+		pthread_mutex_lock(&audiolock);
 
 		//close down speakers
 
 		Setaudioflag(false);
+		pthread_mutex_unlock(&audiolock);
 
 	}
 }
@@ -162,17 +195,21 @@ void MainWindow::on_enable_speakers_clicked(bool checked) {
 void MainWindow::on_enable_recording_clicked(bool checked) {
 
 	if (checked == true) {
+		pthread_mutex_lock(&mp3lock);
 
 		mp3file = fopen("fmdemod_demod.bin", "wb");
 
 		Setmp3flag(true);
+		pthread_mutex_unlock(&mp3lock);
 
 	} else if (checked == false) {
 
-		//close down file
+		pthread_mutex_lock(&mp3lock);
+
 		fclose(mp3file);
 
 		Setmp3flag(false);
+		pthread_mutex_unlock(&mp3lock);
 
 	}
 }
@@ -193,17 +230,24 @@ void* MainWindow::receivethread(void *ptr) {
 	int rcv_length;
 	while (input->datasocket->Getrunningflag() == true) {
 		rcv_length = input->datasocket->receive(input->datasocket->receivebuffer);
+
+		pthread_mutex_lock(&input->mp3lock);
 		if (input->Getaudioflag() == true) {
 			//send sound to speakers
 		}
+		pthread_mutex_unlock(&input->mp3lock);
+
+		pthread_mutex_lock(&input->audiolock);
 		if (input->Getmp3flag() == true) {
 
-			if (rcv_length > 0){
-			printf("length = %d\n", rcv_length);}
+			if (rcv_length > 0) {
+				printf("length = %d\n", rcv_length);
+			}
 			fwrite(input->datasocket->receivebuffer, 1, rcv_length, input->mp3file);
 
 			//write to mp3
 		}
+		pthread_mutex_unlock(&input->audiolock);
 
 	}
 

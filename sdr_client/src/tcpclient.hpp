@@ -10,32 +10,34 @@
 #include <iostream>
 #include <fstream>
 
-
+struct commandstructure {
+	uint32_t cmd;
+	uint32_t param;
+};
 
 namespace std {
 
-
 class tcpsocket {
 public:
-    tcpsocket();
+	tcpsocket();
 
-    struct sockaddr_in servaddr;
-    int sockfd;
-    bool socketwasopenflag;
+	struct sockaddr_in servaddr;
+	int sockfd;
+	bool socketwasopenflag;
 
-    void assignipaddr(std::string);
-    void assignport(int port);
-    void createsocket();
-    bool opensocket();
+	void assignipaddr(std::string);
+	void assignport(int port);
+	void createsocket();
+	bool opensocket();
 	void Setrunningflag(bool);
 	bool Getrunningflag();
-    int receive(char*);
-    void closesocket();
+	int receive(char*);
+	void closesocket();
+	void sendcommand(struct commandstructure);
 
-
-    virtual ~tcpsocket();
+	virtual ~tcpsocket();
 private:
-    bool runningflag;
+	bool runningflag;
 
 };
 
