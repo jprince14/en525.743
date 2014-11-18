@@ -63,6 +63,7 @@ int tcpsocket::receive(char* passedinbuffer) {
 //	recv_size = recvfrom()
 //
 //	return recv_size;
+	return 0;
 }
 
 void tcpsocket::Setrunningflag(bool input) {

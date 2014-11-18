@@ -197,8 +197,6 @@ void MainWindow::on_enable_speakers_clicked(bool checked) {
 		audio_init();
 		Setaudioflag(true);
 
-#warning - first initialize speakers
-
 		pthread_mutex_unlock(&audiolock);
 
 	} else if (checked == false) {
@@ -207,6 +205,7 @@ void MainWindow::on_enable_speakers_clicked(bool checked) {
 		//close down speakers
 
 		Setaudioflag(false);
+		audio_close();
 		pthread_mutex_unlock(&audiolock);
 
 	}
@@ -216,13 +215,8 @@ void MainWindow::on_enable_recording_clicked(bool checked) {
 
 	if (checked == true) {
 		pthread_mutex_lock(&mp3lock);
-		printf("location 1\n");
-		recordmp3_initialize();\
-		printf("location 2\n");
-		mp3file = fopen(ui->mp3_location->text().toStdString().c_str(), "wb");
-		printf("location 3\n");
+		recordmp3_initialize(); //mp3 file opened in this function
 		Setmp3flag(true);
-		printf("location 4\n");
 		pthread_mutex_unlock(&mp3lock);
 
 	} else if (checked == false) {
@@ -252,6 +246,8 @@ void* MainWindow::receivethread(void *ptr) {
 
 	input->datasocket->Setrunningflag(true);
 	int rcv_length;
+
+#warning - do i need a mutex lock the the get running flag
 	while (input->datasocket->Getrunningflag() == true) {
 		rcv_length = input->datasocket->receive(input->datasocket->receivebuffer);
 
@@ -302,6 +298,8 @@ void MainWindow::recordmp3_initialize() {
 //	lame_set_out_samplerate(lame_encoder->lame, 16000);
 	lame_init_params(lame);
 
+	mp3file = fopen(ui->mp3_location->text().toStdString().c_str(), "wb");
+
 }
 
 void MainWindow::recordmp3_close() {
@@ -319,40 +317,40 @@ void MainWindow::recordmp3_work(float* buffer, int length, FILE* mp3file) {
 
 }
 
-void audio_init() {
+void MainWindow::audio_init() {
 
 	pulsespec.format = PA_SAMPLE_FLOAT32LE;
 	pulsespec.channels = 1;
 	pulsespec.rate = 48000;
 
-pulsestruct = pa_simple_new(NULL, // Use the default server.
-		"rtlsdr_demod_client",// Our application's name.
-		PA_STREAM_PLAYBACK,
-		NULL,// Use the default device.
-		"Music",// Description of our stream.
-		&pulsespec,// Our sample format.
-		NULL,// Use default channel map
-		NULL,// Use default buffering attributes.
-		NULL,// Ignore error code.
-);
+	pulsestruct = pa_simple_new(NULL, // Use the default server.
+			"rtlsdr_demod_client", // Our application's name.
+			PA_STREAM_PLAYBACK,
+			NULL, // Use the default device.
+			"Music", // Description of our stream.
+			&pulsespec, // Our sample format.
+			NULL, // Use default channel map
+			NULL, // Use default buffering attributes.
+			NULL // Ignore error code.
+			);
 
 }
 
-void audio_play(float* bufer, int length) {
-int error;
-if (pa_simple_write(pulsestruct, bufer, (size_t) length, &error) < 0) {
-	fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
-}
+void MainWindow::audio_play(float* bufer, int length) {
+	int error;
+	if (pa_simple_write(pulsestruct, bufer, (size_t) length, &error) < 0) {
+		fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
+	}
 
 }
 
-void audio_close() {
+void MainWindow::audio_close() {
 
-int error;
-if (pa_simple_drain(pulsestruct, &error) < 0) {
-	fprintf(stderr, __FILE__": pa_simple_drain() failed: %s\n", pa_strerror(error));
+	int error;
+	if (pa_simple_drain(pulsestruct, &error) < 0) {
+		fprintf(stderr, __FILE__": pa_simple_drain() failed: %s\n", pa_strerror(error));
 
-}
-pa_simple_free (pulsestruct);
+	}
+	pa_simple_free(pulsestruct);
 
 }

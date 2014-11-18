@@ -18,7 +18,7 @@ public:
 
 	struct sockaddr_in servaddr;
 	int sockfd;
-	float receivebuffer[1500];
+	float receivebuffer[10000];
 	bool socketwasopenflag;
 	void Setrunningflag(bool);
 	bool Getrunningflag();

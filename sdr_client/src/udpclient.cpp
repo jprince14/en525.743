@@ -49,7 +49,7 @@ bool udpsocket::opensocket() {
 int udpsocket::receive(float* passedinbuffer) {
 	socklen_t fromlen = sizeof(servaddr);
 
-	int length = recvfrom(sockfd, (char*) &receivebuffer, 1500 * sizeof(float), 0, (struct sockaddr *) &servaddr,
+	int length = recvfrom(sockfd, (char*) &receivebuffer, 10000 * sizeof(float), 0, (struct sockaddr *) &servaddr,
 			&fromlen);
 
 	printf("length = %d\n", length);
