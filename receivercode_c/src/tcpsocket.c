@@ -62,12 +62,12 @@ void processcommand(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, st
 
 	} else if (inputsocket->receivebuffer[0] == 1) {
 //Tune Fm frequency
-		tune_sdr(sdr, inputsocket->receivebuffer[1]);
+		tune_sdr(sdr, inputsocket->receivebuffer[1], dsp);
 	}
 
 	if (inputsocket->receivebuffer[0] == 2) {
 //set cb channel
-		set_cb_freq_sdr(dsp, inputsocket->receivebuffer[1]);
+		set_cb_freq_sdr(dsp, inputsocket->receivebuffer[1], dsp);
 
 	}
 

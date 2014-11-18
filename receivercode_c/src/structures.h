@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <rtl-sdr.h>
 
-
 #define mono_FM 0
 #define stereo_FM 1
 #define cb_AM 2
@@ -84,6 +83,7 @@ struct liquidobjects {
 	float buf_demod[1000];     // demodulator output buffer
 	unsigned int nw_resamp;
 	unsigned int buffercounter;
+	uint32_t centerfreq;
 	float sample_rate_rf; // input sample rate from RTL SDR
 	float sample_rate_audio;   // audio sample rate
 	float FM_cutoff_freq_rf;   // RF cut-off frequency
@@ -104,9 +104,9 @@ struct tcp_socket {
 	int sockfd;
 	bool receiverexitflag;
 	int receivesize;
-    socklen_t clilen;
-    int newsockfd;
-    uint32_t receivebuffer[100];
+	socklen_t clilen;
+	int newsockfd;
+	uint32_t receivebuffer[100];
 };
 
 struct control {
@@ -128,21 +128,18 @@ struct audiostruct {
 	float audiobuffer[500];
 };
 
-
-struct rtlsdrstruct
-{
+struct rtlsdrstruct {
 // the librtlsdr device object and the index used to look it up
-rtlsdr_dev_t * device;
-int device_index;
+	rtlsdr_dev_t * device;
+	int device_index;
 // called whenever samples are received from the RTL
 //rtl_execute_callback execute_callback;
 //void * execute_ctx;
 // buffer for samples received from the RTL
-uint8_t buffer[12*1024];
-int receivesize;
-uint32_t sample_rate;
-bool receiverexitflag;
-FILE * filewrite; //This file is only for testing purposes to write output to a file
+	uint8_t buffer[12 * 1024];
+	int receivesize;
+	bool receiverexitflag;
+	FILE * filewrite; //This file is only for testing purposes to write output to a file
 
 };
 

@@ -62,7 +62,7 @@ void* menufunction(void* ptr) {
 			printf("Enter the desired tuning frequency (in Hz)\n");
 			uint32_t freq;
 			scanf("%d", &freq);
-			tune_sdr(sdr_control->sdrstruct, freq);
+			tune_sdr(sdr_control->sdrstruct, freq, sdr_control->demodstruct);
 		}
 
 		// adjust sampling rate
@@ -72,7 +72,7 @@ void* menufunction(void* ptr) {
 			uint32_t samplingrate;
 			scanf("%d", &samplingrate);
 
-			setsamplingrate_sdr(sdr_control->sdrstruct, samplingrate);
+			setsamplingrate_sdr(sdr_control->sdrstruct, samplingrate, sdr_control->demodstruct);
 		}
 		if (x == 3) {
 			int fmoption;
@@ -86,7 +86,7 @@ void* menufunction(void* ptr) {
 					printf("Enter the desired tuning frequency (in Hz)\n");
 					uint32_t freq;
 					scanf("%d", &freq);
-					tune_sdr(sdr_control->sdrstruct, freq);
+					tune_sdr(sdr_control->sdrstruct, freq, sdr_control->demodstruct);
 					sdr_control->demodstruct->demodtype = mono_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
@@ -97,7 +97,7 @@ void* menufunction(void* ptr) {
 					printf("Enter the desired tuning frequency (in Hz)\n");
 					uint32_t freq;
 					scanf("%d", &freq);
-					tune_sdr(sdr_control->sdrstruct, freq);
+					tune_sdr(sdr_control->sdrstruct, freq, sdr_control->demodstruct);
 					sdr_control->demodstruct->demodtype = stereo_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
@@ -108,7 +108,7 @@ void* menufunction(void* ptr) {
 					int cbchannel;
 					printf("Select CB Radio Channel - select 1 - 40\n");
 					scanf("%d", &cbchannel);
-					set_cb_freq_sdr(sdr_control->sdrstruct, cbchannel);
+					set_cb_freq_sdr(sdr_control->sdrstruct, cbchannel, sdr_control->demodstruct);
 
 					sdr_control->demodstruct->demodtype = cb_AM;
 					sdr_control->demodstruct->buffercounter = 0;
@@ -121,7 +121,7 @@ void* menufunction(void* ptr) {
 			int cbchannel;
 			printf("Select CB Radio Channel - select 1 - 40\n");
 			scanf("%d", &cbchannel);
-			set_cb_freq_sdr(sdr_control->sdrstruct, cbchannel);
+			set_cb_freq_sdr(sdr_control->sdrstruct, cbchannel, sdr_control->demodstruct);
 		}
 
 		//Exit
@@ -193,7 +193,7 @@ int main(int argc, char**argv) {
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
 	rtlsdr->filewrite = fopen("sdroutput.bin", "wb");
 
-	if (opensdr(rtlsdr) == true) {
+	if (opensdr(rtlsdr, processingstruct) == true) {
 		if (pthread_create(&menuthread, NULL, menufunction, controlstruct) == 0) {
 			if (pthread_create(&commandtcpsocket, NULL, c2_socketcontrol, controlstruct) == 0) {
 

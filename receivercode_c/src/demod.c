@@ -31,7 +31,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 					&dsp->nw_resamp);
 
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
-			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+//			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 			dsp->buffercounter += (dsp->nw_resamp);
 		}
 
