@@ -40,7 +40,7 @@ void sdr_work(struct rtlsdrstruct* sdr) {
 	if (x < 0) {
 		printf("Samples read: %d\n",sdr->receivesize);
 		printf("Error reading from SDR\n");
-		exit(0);
+//		exit(0);
 	}
 //	rtlsdr_read_async(sdr->device, rtlsdr_callback, s, 0, s->buf_len);
 	printf("Samples read: %d\n",sdr->receivesize);

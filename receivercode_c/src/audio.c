@@ -40,6 +40,13 @@ void initializeaudio(struct audiostruct* alsa) {
 		exit(1);
 	}
 
+//	snd_pcm_uframes_t buffer_size = 1024;
+//	snd_pcm_uframes_t period_size = 64;
+//
+//	snd_pcm_hw_params_set_buffer_size_near (alsa->playback_handle, alsa->hw_params, &buffer_size);
+//	snd_pcm_hw_params_set_period_size_near (alsa->playback_handle, alsa->hw_params, &period_size, NULL);
+
+
 	if ((err = snd_pcm_hw_params(alsa->playback_handle, alsa->hw_params)) < 0) {
 		fprintf(stderr, "cannot set parameters (%s)\n", snd_strerror(err));
 		exit(1);
