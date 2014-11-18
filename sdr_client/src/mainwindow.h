@@ -8,6 +8,9 @@
 #include <string.h>
 #include <string>
 #include <lame/lame.h>
+#include <pulse/pulseaudio.h>
+#include <pulse/simple.h>
+#include <pulse/error.h>
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +28,9 @@ public:
 	void initialize_open_udp_socket(std::udpsocket*);
 
 	void initialize_open_tcp_socket(std::tcpsocket*);
+
+	struct pa_simple *pulsestruct;
+	struct pa_sample_spec pulsespec;
 
 	static void* receivethread(void*);
 	bool socketconnectflag;
@@ -46,6 +52,10 @@ public:
 	void recordmp3_initialize();
 	void recordmp3_close();
 	void recordmp3_work(float*, int, FILE*);
+	void audio_play(float*, int);
+	void audio_init();
+
+//	/http://freedesktop.org/software/pulseaudio/doxygen/simple.html#overv_sec
 
 private slots:
 

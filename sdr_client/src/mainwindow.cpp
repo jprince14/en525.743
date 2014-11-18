@@ -1,6 +1,6 @@
-#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "tcpclient.hpp"
+#include "mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
 		QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -194,7 +194,7 @@ void MainWindow::on_mp3_location_editingFinished() {
 void MainWindow::on_enable_speakers_clicked(bool checked) {
 	if (checked == true) {
 		pthread_mutex_lock(&audiolock);
-
+		audio_init();
 		Setaudioflag(true);
 
 #warning - first initialize speakers
@@ -216,10 +216,13 @@ void MainWindow::on_enable_recording_clicked(bool checked) {
 
 	if (checked == true) {
 		pthread_mutex_lock(&mp3lock);
-		recordmp3_initialize();
+		printf("location 1\n");
+		recordmp3_initialize();\
+		printf("location 2\n");
 		mp3file = fopen(ui->mp3_location->text().toStdString().c_str(), "wb");
-
+		printf("location 3\n");
 		Setmp3flag(true);
+		printf("location 4\n");
 		pthread_mutex_unlock(&mp3lock);
 
 	} else if (checked == false) {
@@ -252,16 +255,20 @@ void* MainWindow::receivethread(void *ptr) {
 	while (input->datasocket->Getrunningflag() == true) {
 		rcv_length = input->datasocket->receive(input->datasocket->receivebuffer);
 
+//		printf("")
+
 		pthread_mutex_lock(&input->mp3lock);
 		if (input->Getaudioflag() == true) {
 			//send sound to speakers
+			input->audio_play(input->datasocket->receivebuffer, rcv_length);
+
 		}
 		pthread_mutex_unlock(&input->mp3lock);
 
 		pthread_mutex_lock(&input->audiolock);
 		if (input->Getmp3flag() == true) {
 
-			recordmp3_work(input->datasocket->receivebuffer, rcv_length, input->mp3file);
+			input->recordmp3_work(input->datasocket->receivebuffer, rcv_length, input->mp3file);
 
 		}
 		pthread_mutex_unlock(&input->audiolock);
@@ -306,8 +313,46 @@ void MainWindow::recordmp3_close() {
 
 void MainWindow::recordmp3_work(float* buffer, int length, FILE* mp3file) {
 
-	mp3buffsize = lame_encode_buffer_ieee_float(lame, buffer, buffer, length, mp3buffer, 10240);
+	mp3buffsize = lame_encode_buffer_ieee_float(lame, buffer, buffer, length / sizeof(float), mp3buffer, 10240);
 
 	fwrite(mp3buffer, 1, mp3buffsize, mp3file);
+
+}
+
+void audio_init() {
+
+	pulsespec.format = PA_SAMPLE_FLOAT32LE;
+	pulsespec.channels = 1;
+	pulsespec.rate = 48000;
+
+pulsestruct = pa_simple_new(NULL, // Use the default server.
+		"rtlsdr_demod_client",// Our application's name.
+		PA_STREAM_PLAYBACK,
+		NULL,// Use the default device.
+		"Music",// Description of our stream.
+		&pulsespec,// Our sample format.
+		NULL,// Use default channel map
+		NULL,// Use default buffering attributes.
+		NULL,// Ignore error code.
+);
+
+}
+
+void audio_play(float* bufer, int length) {
+int error;
+if (pa_simple_write(pulsestruct, bufer, (size_t) length, &error) < 0) {
+	fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
+}
+
+}
+
+void audio_close() {
+
+int error;
+if (pa_simple_drain(pulsestruct, &error) < 0) {
+	fprintf(stderr, __FILE__": pa_simple_drain() failed: %s\n", pa_strerror(error));
+
+}
+pa_simple_free (pulsestruct);
 
 }
