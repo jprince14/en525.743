@@ -11,6 +11,7 @@
 #include <pulse/pulseaudio.h>
 #include <pulse/simple.h>
 #include <pulse/error.h>
+#include <queue>
 
 namespace Ui {
 class MainWindow;
@@ -33,6 +34,8 @@ public:
 	pa_sample_spec pulsespec;
 
 	static void* receivethread(void*);
+	static void* audiomp3thread(void*);
+
 	bool socketconnectflag;
 	bool Getaudioflag();
 
@@ -48,13 +51,15 @@ public:
 	FILE* mp3file;
 
 	pthread_t receive_pthread;
+	pthread_t output_pthread;
 
 	void recordmp3_initialize();
 	void recordmp3_close();
-	void recordmp3_work(float*, int, FILE*);
-	void audio_play(float*, int);
+	void recordmp3_work(std::udpsocket*, FILE*);
+	void audio_play(std::udpsocket*);
 	void audio_init();
 	void audio_close();
+	void restartoutput();
 
 //	/http://freedesktop.org/software/pulseaudio/doxygen/simple.html#overv_sec
 

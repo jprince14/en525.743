@@ -24,9 +24,13 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 MainWindow::~MainWindow() {
+
 	delete datasocket;
+	printf("data socket deleted\n");
 	delete controlsocket;
+	printf("control socket deleted\n");
 	delete ui;
+	printf("ui deleted\n");
 
 }
 
@@ -90,26 +94,23 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* socket) {
 
 		printf("Error creating UDP thread\n");
 	}
+	if (pthread_create(&output_pthread, NULL, audiomp3thread, this) != 0) {
+
+		printf("Error creating audio and mp3 thread\n");
+	}
 
 }
 
 void MainWindow::on_beaglebone_ip_editingFinished() {
-//	printf("on_beaglebone_ip_editingFinished was run\n");
-	controlsocket->Setrunningflag(false);
-	datasocket->Setrunningflag(false);
-	controlsocket->closesocket();
-	datasocket->closesocket();
-	initialize_open_tcp_socket(controlsocket);
-	initialize_open_udp_socket(datasocket);
+
+	restartoutput();
 
 }
 
 void MainWindow::on_beaglebone_port_editingFinished() {
 
-	controlsocket->closesocket();
-	datasocket->closesocket();
-	initialize_open_tcp_socket(controlsocket);
-	initialize_open_udp_socket(datasocket);
+	restartoutput();
+
 }
 
 void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
@@ -206,6 +207,7 @@ void MainWindow::on_enable_speakers_clicked(bool checked) {
 
 		Setaudioflag(false);
 		audio_close();
+		datasocket->audiobufferset = false;
 		pthread_mutex_unlock(&audiolock);
 
 	}
@@ -232,11 +234,52 @@ void MainWindow::on_enable_recording_clicked(bool checked) {
 	}
 }
 
-void MainWindow::on_beaglebone_data_port_editingFinished() {
+void MainWindow::restartoutput() {
+	bool mp3checked = ui->enable_recording->isChecked();
+	bool audiochecked = ui->enable_speakers->isChecked();
+	printf("location 1\n");
+
+	if (mp3checked == true) {
+		on_enable_recording_clicked(false);
+	}
+	if (audiochecked == true) {
+		on_enable_speakers_clicked(false);
+	}
+
+	controlsocket->Setrunningflag(false);
+	datasocket->Setrunningflag(false);
+
+	printf("location 2\n");
+
 	controlsocket->closesocket();
 	datasocket->closesocket();
+
+	printf("location 3\n");
+
+//	pthread_join(receive_pthread, NULL);
+//	pthread_join(output_pthread, NULL);
+
+	printf("location 4\n");
+
 	initialize_open_tcp_socket(controlsocket);
 	initialize_open_udp_socket(datasocket);
+
+	printf("location 5\n");
+
+	if (mp3checked == true) {
+		on_enable_recording_clicked(true);
+	}
+	if (audiochecked == true) {
+		on_enable_speakers_clicked(true);
+	}
+	printf("location 6\n");
+
+}
+
+void MainWindow::on_beaglebone_data_port_editingFinished() {
+
+	restartoutput();
+
 }
 
 void* MainWindow::receivethread(void *ptr) {
@@ -245,33 +288,52 @@ void* MainWindow::receivethread(void *ptr) {
 	printf("thread was opened\n");
 
 	input->datasocket->Setrunningflag(true);
-	int rcv_length;
 
 #warning - do i need a mutex lock the the get running flag
 	while (input->datasocket->Getrunningflag() == true) {
-		rcv_length = input->datasocket->receive(input->datasocket->receivebuffer);
-
-//		printf("")
-
-		pthread_mutex_lock(&input->mp3lock);
-		if (input->Getaudioflag() == true) {
-			//send sound to speakers
-			input->audio_play(input->datasocket->receivebuffer, rcv_length);
-
-		}
-		pthread_mutex_unlock(&input->mp3lock);
-
-		pthread_mutex_lock(&input->audiolock);
-		if (input->Getmp3flag() == true) {
-
-			input->recordmp3_work(input->datasocket->receivebuffer, rcv_length, input->mp3file);
-
-		}
-		pthread_mutex_unlock(&input->audiolock);
+		input->datasocket->receive();
 
 	}
 
+	printf("receive thread has exited\n");
+
 	return NULL;
+}
+
+void* MainWindow::audiomp3thread(void *ptr) {
+
+	MainWindow* input = (MainWindow*) ptr;
+
+	printf("audiomp3thread launched\n");
+
+	while (input->datasocket->Getrunningflag() == true) {
+
+//		pthread_mutex_lock(&input->audiolock);
+		if (input->Getmp3flag() == true) {
+
+			input->recordmp3_work(input->datasocket, input->mp3file);
+
+		}
+//		pthread_mutex_unlock(&input->audiolock);
+
+		//the mp3 must come before the audio since the pop from the queue is in the audio code
+
+
+//		pthread_mutex_lock(&input->mp3lock);
+		if (input->Getaudioflag() == true) {
+			//send sound to speakers
+			input->audio_play(input->datasocket);
+
+		}
+
+//		pthread_mutex_unlock(&input->mp3lock);
+
+	}
+
+	printf("output thread has exited\n");
+
+	return NULL;
+
 }
 
 bool MainWindow::Getaudioflag() {
@@ -292,7 +354,7 @@ void MainWindow::recordmp3_initialize() {
 	lame = lame_init();
 	lame_set_in_samplerate(lame, (48000));
 	lame_set_VBR(lame, vbr_off); //sets cbr
-	lame_set_VBR_q(lame, 5); // 0 = best vbr q 5=~128k
+	lame_set_VBR_q(lame, 3); // 0 = best vbr q 5=~128k
 //	lame_set_out_samplerate(lame_encoder->lame, (dsp->sample_rate_audio));
 //	lame_set_num_channels(lame_encoder->lame, 1);
 //	lame_set_out_samplerate(lame_encoder->lame, 16000);
@@ -309,11 +371,21 @@ void MainWindow::recordmp3_close() {
 
 }
 
-void MainWindow::recordmp3_work(float* buffer, int length, FILE* mp3file) {
+void MainWindow::recordmp3_work(std::udpsocket* socket, FILE* mp3file) {
 
-	mp3buffsize = lame_encode_buffer_ieee_float(lame, buffer, buffer, length / sizeof(float), mp3buffer, 10240);
+	if ((int) socket->rcv_que->size() > 5) {
 
-	fwrite(mp3buffer, 1, mp3buffsize, mp3file);
+		mp3buffsize = lame_encode_buffer_ieee_float(lame, socket->rcv_que->front().rcvbuffer,
+				socket->rcv_que->front().rcvbuffer, socket->rcv_que->front().revlength / sizeof(float), mp3buffer,
+				10240);
+
+		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
+	}
+
+	//only pop off if he audio flag = false, otherwise the play audio function will pop
+	if (Getaudioflag() == false) {
+		socket->rcv_que->pop();
+	}
 
 }
 
@@ -336,10 +408,28 @@ void MainWindow::audio_init() {
 
 }
 
-void MainWindow::audio_play(float* bufer, int length) {
+void MainWindow::audio_play(std::udpsocket* socket) {
 	int error;
-	if (pa_simple_write(pulsestruct, bufer, (size_t) length, &error) < 0) {
-		fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
+
+	if (socket->audiobufferset == true) {
+
+		printf("audio length = %d\n", socket->rcv_que->front().revlength);
+
+		if ((int) socket->rcv_que->size() > 1) {
+			if (pa_simple_write(pulsestruct, socket->rcv_que->front().rcvbuffer,
+					(size_t) socket->rcv_que->front().revlength, &error) < 0) {
+				fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
+			}
+			socket->rcv_que->pop();
+
+		} else {
+			//do nothing and let the buffer grow til its size 5
+		}
+	} else {
+		if ((int) socket->rcv_que->size() > 5000) {
+			socket->audiobufferset = true;
+		}
+
 	}
 
 }

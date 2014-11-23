@@ -9,6 +9,10 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
+#include <queue>
+
+
+
 
 namespace std {
 
@@ -23,14 +27,22 @@ public:
 	void Setrunningflag(bool);
 	bool Getrunningflag();
 
+	struct receivestruct {
+		unsigned int revlength;
+		float rcvbuffer[2500];
+	};
 
+	struct receivestruct rcv_struct;
+	std::queue<receivestruct> *rcv_que;
+
+	bool audiobufferset;
 
 	void assignipaddr(std::string);
 	void assignport(int port);
 	void createsocket();
 	bool opensocket();
 
-	int receive(float*);
+	int receive();
 	void closesocket();
 
 	virtual ~udpsocket();

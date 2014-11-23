@@ -3,10 +3,12 @@
 namespace std {
 
 udpsocket::udpsocket() :
-		socketwasopenflag(false), runningflag(false) {
+		socketwasopenflag(false), runningflag(false), audiobufferset(false) {
 	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
+	rcv_que = new std::queue<receivestruct>;
+
 }
 
 void udpsocket::assignipaddr(std::string ipaddr) {
@@ -46,28 +48,37 @@ bool udpsocket::opensocket() {
 
 }
 
-int udpsocket::receive(float* passedinbuffer) {
+int udpsocket::receive() {
 	socklen_t fromlen = sizeof(servaddr);
 
-	int length = recvfrom(sockfd, (char*) &receivebuffer, 10000 * sizeof(float), 0, (struct sockaddr *) &servaddr,
-			&fromlen);
+	rcv_struct.revlength = recvfrom(sockfd, (char*) &rcv_struct.rcvbuffer, 2500 * sizeof(float), 0,
+			(struct sockaddr *) &servaddr, &fromlen);
 
-	printf("length = %d\n", length);
+	rcv_que->push(rcv_struct);
 
-	return length;
+	printf("queue.size = %d with length %d and struct length %d\n", (int) rcv_que->size(),  rcv_que->back().revlength, rcv_struct.revlength);
+
+
+//	return length;
 }
 
-void udpsocket::Setrunningflag(bool input){
+void udpsocket::Setrunningflag(bool input) {
 	runningflag = input;
 }
-bool udpsocket::Getrunningflag(){
+bool udpsocket::Getrunningflag() {
 	return runningflag;
 }
-
 
 udpsocket::~udpsocket() {
 // TODO Auto-generated destructor stub
 
+
+//	delete rcv_struct;
+
+//	printf("rcv_struct deleted\n");
+
+	delete rcv_que;
+	printf("rcv_que deleted\n");
 }
 
 } /* namespace std */
