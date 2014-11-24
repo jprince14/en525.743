@@ -33,7 +33,7 @@ public:
 	bool Getrunningflag();
 	int receive(char*);
 	void closesocket();
-	void sendcommand(struct commandstructure);
+	void sendcommand(uint32_t command[2]);
 
 	virtual ~tcpsocket();
 private:

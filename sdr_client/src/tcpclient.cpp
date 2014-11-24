@@ -52,9 +52,19 @@ bool tcpsocket::opensocket() {
 
 }
 
-void tcpsocket::sendcommand(struct commandstructure command) {
+void tcpsocket::sendcommand(uint32_t command[2]) {
 
-#warning - come back here
+	if (socketwasopenflag == true) {
+//		int n;
+//		n = write(sockfd, "I got your message", 18);
+//		if (n < 0) {
+//			printf("ERROR writing to socket\n");
+//		}
+		int n = write(sockfd, command, 2 * sizeof(uint32_t));
+		if (n < 0) {
+			printf("ERROR writing to socket\n");
+		}
+	}
 }
 
 int tcpsocket::receive(char* passedinbuffer) {

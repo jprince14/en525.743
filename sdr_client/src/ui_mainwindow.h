@@ -199,7 +199,7 @@ public:
         );
         fm_freq_BOX->setText(QApplication::translate("MainWindow", "97900000", 0, QApplication::UnicodeUTF8));
         ip_label->setText(QApplication::translate("MainWindow", "BealeBone IP", 0, QApplication::UnicodeUTF8));
-        beaglebone_ip->setText(QApplication::translate("MainWindow", "192.168.12..2", 0, QApplication::UnicodeUTF8));
+        beaglebone_ip->setText(QApplication::translate("MainWindow", "127.0.0.1", 0, QApplication::UnicodeUTF8));
         fm_freq_label->setText(QApplication::translate("MainWindow", "FM - Frequency", 0, QApplication::UnicodeUTF8));
         cb_channel_label->setText(QApplication::translate("MainWindow", "CB - Channel", 0, QApplication::UnicodeUTF8));
         enable_recording->setText(QApplication::translate("MainWindow", "Record to mp3 file", 0, QApplication::UnicodeUTF8));

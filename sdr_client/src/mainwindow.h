@@ -31,6 +31,7 @@ public:
 	void initialize_open_tcp_socket(std::tcpsocket*);
 
 	pa_simple *pulsestruct;
+	pa_buffer_attr pabuffer;
 	pa_sample_spec pulsespec;
 
 	static void* receivethread(void*);
@@ -55,11 +56,13 @@ public:
 
 	void recordmp3_initialize();
 	void recordmp3_close();
-	void recordmp3_work(std::udpsocket*, FILE*);
-	void audio_play(std::udpsocket*);
+	void recordmp3_work();
+	void audio_play();
 	void audio_init();
 	void audio_close();
 	void restartoutput();
+	void restartspeakers(bool);
+	void restartmp3(bool);
 
 //	/http://freedesktop.org/software/pulseaudio/doxygen/simple.html#overv_sec
 
@@ -89,6 +92,11 @@ private:
 	Ui::MainWindow *ui;
 	bool recordmp3;
 	bool playaudio;
+	int dataport;
+	int controlport;
+	std::string beagleip;
+	std::string mp3location;
+	int fmfreq;
 }
 ;
 

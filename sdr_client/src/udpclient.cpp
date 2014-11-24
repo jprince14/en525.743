@@ -56,8 +56,12 @@ int udpsocket::receive() {
 
 	rcv_que->push(rcv_struct);
 
-	printf("queue.size = %d with length %d and struct length %d\n", (int) rcv_que->size(),  rcv_que->back().revlength, rcv_struct.revlength);
+	if ((int) rcv_que->size() % 25 == 0) {
+		printf("rcv_que length = %d\n", rcv_que->size());
 
+	}
+//	printf("queue.size = %d with length %d and struct length %d\n", (int) rcv_que->size(), rcv_que->back().revlength,
+//			rcv_struct.revlength);
 
 //	return length;
 }
@@ -71,7 +75,6 @@ bool udpsocket::Getrunningflag() {
 
 udpsocket::~udpsocket() {
 // TODO Auto-generated destructor stub
-
 
 //	delete rcv_struct;
 
