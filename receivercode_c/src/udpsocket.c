@@ -36,7 +36,7 @@ void udp_senddata_float(struct udp_socket* inputsocket, struct liquidobjects* sd
 
 //	sendto(inputsocket->sockfd, "TEST SEND", 9, 0,
 //			(struct sockaddr *) &inputsocket->servaddr, sizeof(inputsocket->servaddr));
-	printf("sdr->buffercounter = %d\n", sdr->copy_buffcounter);
+//	printf("sdr->buffercounter = %d\n", sdr->copy_buffcounter);
 	sendto(inputsocket->sockfd, sdr->buf_resamp, sizeof(float) * sdr->copy_buffcounter, 0,
 			(struct sockaddr *) &inputsocket->servaddr, sizeof(inputsocket->servaddr));
 

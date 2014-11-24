@@ -1,7 +1,23 @@
 #include "audio.h"
 
-void initializeaudio(struct audiostruct* alsa) {
-	int err;
+void initializeaudio(struct audiostruct* audio) {
+
+	audio->pulsespec.format = PA_SAMPLE_FLOAT32LE;
+	audio->pulsespec.channels = 1;
+	audio->pulsespec.rate = 48000;
+
+	audio->pulsestruct = pa_simple_new(NULL, // Use the default server.
+			"rtlsdr_demod_client", // Our application's name.
+			PA_STREAM_PLAYBACK,
+			NULL, // Use the default device.
+			"Music", // Description of our stream.
+			&audio->pulsespec, // Our sample format.
+			NULL, // Use default channel map
+			NULL, // Use default buffering attributes.
+			NULL // Ignore error code.
+			);
+
+	/*int err;
 
 	if ((err = snd_pcm_open(&alsa->playback_handle, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
 		fprintf(stderr, "cannot open audio device %s (%s)\n", "default", snd_strerror(err));
@@ -60,23 +76,31 @@ void initializeaudio(struct audiostruct* alsa) {
 	}
 
 	alsa->audiobuffer_size = 0;
-	alsa->minaudiobuffersize = 50;
+	alsa->minaudiobuffersize = 50;*/
 }
 
-void playaudio(struct liquidobjects* dsp, struct audiostruct* alsa) {
+void playaudio(struct liquidobjects* dsp, struct audiostruct* audio) {
 	int err;
-	printf("dsp->copy_buffcounter = %d\n", dsp->copy_buffcounter);
-	printf("alsa->audiobuffer_size = %d\n", alsa->audiobuffer_size);
+
+	if (pa_simple_write(audio->pulsestruct, dsp->buf_resamp,
+						(size_t) dsp->copy_buffcounter, &err) < 0) {
+					fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(err));
+				}
+
+
+
+//	printf("dsp->copy_buffcounter = %d\n", dsp->copy_buffcounter);
+//	printf("alsa->audiobuffer_size = %d\n", alsa->audiobuffer_size);
 
 //	if (alsa->audiobuffer_size > alsa->minaudiobuffersize) {
 
-		if ((err = snd_pcm_writei(alsa->playback_handle, dsp->buf_resamp, dsp->copy_buffcounter))
+	/*	if ((err = snd_pcm_writei(alsa->playback_handle, dsp->buf_resamp, dsp->copy_buffcounter))
 				!= dsp->copy_buffcounter) {
 			fprintf(stderr, "error %d - write to audio interface failed (%s)\n", err, snd_strerror(err));
 			exit(1);
 		}
 		snd_pcm_drain(alsa->playback_handle);
-		alsa->audiobuffer_size = 0;
+		alsa->audiobuffer_size = 0;*/
 
 //	} else {
 //
@@ -85,7 +109,14 @@ void playaudio(struct liquidobjects* dsp, struct audiostruct* alsa) {
 //	}
 }
 
-void closeaudio(struct audiostruct* alsa) {
-	snd_pcm_close(alsa->playback_handle);
+void closeaudio(struct audiostruct* audio) {
+//	snd_pcm_close(alsa->playback_handle);
+
+	int error;
+	if (pa_simple_drain(audio->pulsestruct, &error) < 0) {
+		fprintf(stderr, __FILE__": pa_simple_drain() failed: %s\n", pa_strerror(error));
+
+	}
+	pa_simple_free(audio->pulsestruct);
 
 }

@@ -25,25 +25,26 @@ bool opensdr(struct rtlsdrstruct* sdr, struct liquidobjects* dsp) {
 
 }
 void tune_sdr(struct rtlsdrstruct* sdr, uint32_t freq, struct liquidobjects* dsp) {
+	dsp->centerfreq = freq;
 	rtlsdr_set_center_freq(sdr->device, freq);
-
 }
 
 void setsamplingrate_sdr(struct rtlsdrstruct* sdr, uint32_t freq, struct liquidobjects* dsp) {
 	dsp->sample_rate_rf = freq;
 	rtlsdr_set_sample_rate(sdr->device, freq);
-
 }
 
 void sdr_work(struct rtlsdrstruct* sdr) {
-	int x = rtlsdr_read_sync(sdr->device, sdr->buffer, 10 * 1024, &sdr->receivesize);
+	int x = rtlsdr_read_sync(sdr->device, sdr->buffer, 25 * 1024, &sdr->receivesize);
 	if (x < 0) {
 		printf("Samples read: %d\n", sdr->receivesize);
 		printf("Error reading from SDR\n");
 //		exit(0);
 	}
 //	rtlsdr_read_async(sdr->device, rtlsdr_callback, s, 0, s->buf_len);
-	printf("Samples read: %d\n", sdr->receivesize);
+	if (sdr->receivesize == 0) {
+		printf("ERROR reading data off SDR, # Samples read: %d\n", sdr->receivesize);
+	}
 
 //	printf("sdr->receivesize = %d\n", sdr->receivesize);
 	fwrite(sdr->buffer, sizeof(uint8_t), sdr->receivesize, sdr->filewrite);
@@ -56,7 +57,7 @@ void closesdr(struct rtlsdrstruct* sdr) {
 
 void set_cb_freq_sdr(struct rtlsdrstruct* sdr, int cbchannel, struct liquidobjects* dsp) {
 
-	printf("channel passed in = %d", cbchannel);
+//	printf("channel passed in = %d", cbchannel);
 	switch (cbchannel) {
 
 	case 1:

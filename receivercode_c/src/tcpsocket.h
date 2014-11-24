@@ -20,6 +20,6 @@ void tcp_createsocket(struct tcp_socket* inputsocket);
 int tcp_opensocket(struct tcp_socket* inputsocket);
 void tcp_closesocket(struct tcp_socket* inputsocket);
 void tcp_listen(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, struct liquidobjects* dsp);
-void processcommand(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, struct liquidobjects* dsp);
+void processcommand(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, struct liquidobjects* dsp, uint32_t part1, uint32_t part2);
 
 #endif

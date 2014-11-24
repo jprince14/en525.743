@@ -53,7 +53,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 		}
 
 	}
-	printf("buffercounter = %d\n", dsp->buffercounter);
+//	printf("buffercounter = %d\n", dsp->buffercounter);
 
 	fwrite(dsp->buf_resamp, 1, sizeof(float) * dsp->buffercounter, dsp->fid_demod);
 

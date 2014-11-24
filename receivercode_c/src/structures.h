@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <rtl-sdr.h>
+#include <pulse/pulseaudio.h>
+#include <pulse/simple.h>
+#include <pulse/error.h>
 
 #define mono_FM 0
 #define stereo_FM 1
@@ -80,7 +83,7 @@ struct liquidobjects {
 	ampmodem ampdemod;
 	float buf_resamp[8192 * 20];    // resampler output buffer
 //	float complex complexbuffer[5120];
-	float buf_demod[1000];     // demodulator output buffer
+	float buf_demod[10000];     // demodulator output buffer
 	unsigned int nw_resamp;
 	unsigned int buffercounter;
 	uint32_t centerfreq;
@@ -106,7 +109,8 @@ struct tcp_socket {
 	int receivesize;
 	socklen_t clilen;
 	int newsockfd;
-	uint32_t receivebuffer[100];
+	char receivebuffer[1000];
+	bool bufferrunning;
 };
 
 struct control {
@@ -126,6 +130,8 @@ struct audiostruct {
 	int audiobuffer_size;
 	int minaudiobuffersize;
 	float audiobuffer[500];
+	pa_simple *pulsestruct;
+	pa_sample_spec pulsespec;
 };
 
 struct rtlsdrstruct {
@@ -136,7 +142,7 @@ struct rtlsdrstruct {
 //rtl_execute_callback execute_callback;
 //void * execute_ctx;
 // buffer for samples received from the RTL
-	uint8_t buffer[12 * 1024];
+	uint8_t buffer[75 * 1024];
 	int receivesize;
 	bool receiverexitflag;
 	FILE * filewrite; //This file is only for testing purposes to write output to a file

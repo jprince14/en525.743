@@ -32,14 +32,19 @@
 
 void* c2_socketcontrol(void* ptr) {
 	struct control* sdr_control = (struct control*) ptr;
-	while (sdr_control->sdrstruct->receiverexitflag == false) {
+
+	// do I need to open before listen?
+	if (tcp_opensocket(sdr_control->controlsocket) == 0) {
+		printf("tcp socket opened\n");
+		while (sdr_control->sdrstruct->receiverexitflag == false) {
 //		printf("receive loop\n");
-#warning - this is causing an error
-//		tcp_listen(sdr_control->controlsocket, sdr_control->sdrstruct, sdr_control->demodstruct);
+			tcp_listen(sdr_control->controlsocket, sdr_control->sdrstruct, sdr_control->demodstruct);
+		}
+
+		tcp_closesocket(sdr_control->controlsocket);
+	} else {
+		printf("ERROR: Unable to open command control socket\n");
 	}
-
-	tcp_closesocket(sdr_control->controlsocket);
-
 	return NULL;
 }
 
@@ -161,8 +166,8 @@ int main(int argc, char**argv) {
 	struct udp_socket* transmitter_socket;
 	transmitter_socket = malloc(sizeof(struct udp_socket));
 
-	struct audiostruct* alsaobject;
-	alsaobject = malloc(sizeof(struct audiostruct));
+	struct audiostruct* audioobject;
+	audioobject = malloc(sizeof(struct audiostruct));
 
 	struct tcp_socket* c2socket;
 	c2socket = malloc(sizeof(struct tcp_socket));
@@ -176,18 +181,17 @@ int main(int argc, char**argv) {
 
 	tcp_setaddress(c2socket, "127.0.0.1");
 	tcp_setport(c2socket, 1234);
+	tcp_createsocket(c2socket);
 
 	udp_setaddress(transmitter_socket, "127.0.0.1");
 	udp_setport(transmitter_socket, 5678);
 	udp_createsocket(transmitter_socket);
 
 	rtlsdr->receiverexitflag = false;
-//	tcp_createsocket(rtlsdr);
 	initialize_dspobjects(processingstruct);
 	initialize_encoder(processingstruct, mp3encoder);
-//	initializecurl(mp3encoder);
 
-	initializeaudio(alsaobject);
+	initializeaudio(audioobject);
 
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
@@ -201,7 +205,7 @@ int main(int argc, char**argv) {
 					sdr_work(rtlsdr);
 					demod_work(rtlsdr, processingstruct);
 					udp_senddata_float(transmitter_socket, processingstruct);
-//					playaudio(processingstruct, alsaobject);
+//					playaudio(processingstruct, audioobject);
 
 					encoder_work(processingstruct, mp3encoder);
 				}
@@ -233,8 +237,8 @@ int main(int argc, char**argv) {
 	fclose(processingstruct->fid_demod);
 	fclose(mp3encoder->outfile);
 	closeudpsocket(transmitter_socket);
-	closeaudio(alsaobject);
-	free(alsaobject);
+	closeaudio(audioobject);
+	free(audioobject);
 	free(controlstruct);
 	free(rtlsdr);
 	free(processingstruct);
