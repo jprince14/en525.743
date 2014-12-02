@@ -160,12 +160,19 @@ int main(int argc, char**argv) {
 	struct udp_socket* transmitter_socket;
 	transmitter_socket = malloc(sizeof(struct udp_socket));
 
-#if DEBUG == 1
+#if MP3 == 0
 	struct encoder* mp3encoder;
 	mp3encoder = malloc(sizeof(struct encoder));
+#endif
 
+#if AUDIO == 0
 	struct audiostruct* audioobject;
 	audioobject = malloc(sizeof(struct audiostruct));
+#endif
+
+#if TESTSOCKET == 0
+	struct udp_socket* testsocket;
+	testsocket = malloc(sizeof(struct udp_socket));
 #endif
 
 	struct tcp_socket* c2socket;
@@ -179,7 +186,7 @@ int main(int argc, char**argv) {
 	controlstruct->controlsocket = c2socket;
 
 
-#if DEVICE_CODE == 0 //beaglebone
+#if OUTPUT_DEVICE == 0 //beaglebone
 	tcp_setaddress(c2socket, "192.168.12.1");
 	tcp_setport(c2socket, 1234);
 	tcp_createsocket(c2socket);
@@ -189,7 +196,7 @@ int main(int argc, char**argv) {
 	udp_createsocket(transmitter_socket);
 #endif
 
-#if DEVICE_CODE == 1 //laptop
+#if OUTPUT_DEVICE == 1 //laptop
 	tcp_setaddress(c2socket, "127.0.0.1");
 	tcp_setport(c2socket, 1234);
 	tcp_createsocket(c2socket);
@@ -199,17 +206,32 @@ int main(int argc, char**argv) {
 	udp_createsocket(transmitter_socket);
 #endif
 
-
 	rtlsdr->receiverexitflag = false;
 	initialize_dspobjects(processingstruct);
 
-#if DEBUG == 1
-	initialize_encoder(processingstruct, mp3encoder);
-	initializeaudio(audioobject);
+#if AUDIO == 0
+		initializeaudio(audioobject);
+#endif
+
+#if WRITEFILES == 1
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	processingstruct->filtered = fopen("filtered.bin", "wb");
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
+#endif
+
+#if MP3 == 0
+	initialize_encoder(processingstruct, mp3encoder);
+#endif
+
+#if SDR_WRITE == 0
 	rtlsdr->filewrite = fopen("sdroutput.bin", "wb");
+#endif
+
+#if TESTSOCKET == 0
+	udp_setaddress(testsocket, "127.0.0.1");
+	udp_setport(testsocket, 9999);
+	udp_createsocket(testsocket);
+
 #endif
 
 	if (opensdr(rtlsdr, processingstruct) == true) {
@@ -218,15 +240,29 @@ int main(int argc, char**argv) {
 
 				while (rtlsdr->receiverexitflag == false) {
 					sdr_work(rtlsdr);
+
+#if TESTSOCKET == 0
+					udp_senddata_test(testsocket, rtlsdr);
+#endif
+
+
+#warning - the demod funciton is too slow which is causing issues
+printf("\n\n\n\nthe demod funciton is too slow which is causing issues\n\n\n\n\n");
+
 					demod_work(rtlsdr, processingstruct);
 					udp_senddata_float(transmitter_socket, processingstruct);
-//					playaudio(processingstruct, audioobject);
 
-#if DEBUG == 1
+#if AUDIO == 0
+					playaudio(processingstruct, audioobject);
+#endif
+
+#if MP3 == 0
 					encoder_work(processingstruct, mp3encoder);
 #endif
+
+
 				}
-#if DEBUG == 1
+#if MP3 == 0
 				encoder_flush(processingstruct, mp3encoder);
 #endif
 				pthread_join(menuthread, NULL);
@@ -251,21 +287,39 @@ int main(int argc, char**argv) {
 	//clean up
 	closesdr(rtlsdr);
 	demod_close(processingstruct);
+
+#if SDR_WRITE == 0
+	fclose(rtlsdr->filewrite);
+#endif
+
 #if DEBUG == 1
 	fclose(processingstruct->fid_demod);
-	close_encoderojects(mp3encoder);
-	fclose(mp3encoder->outfile);
 	fclose(processingstruct->filtered);
 #endif
-	closeudpsocket(transmitter_socket);
-#if DEBUG == 1
+
+#if MP3 == 0
+	fclose(mp3encoder->outfile);
+	close_encoderojects(mp3encoder);
+#endif
+
+closeudpsocket(transmitter_socket);
+
+#if AUDIO == 0
 	closeaudio(audioobject);
 	free(audioobject);
 #endif
+
 	free(controlstruct);
 	free(rtlsdr);
 	free(processingstruct);
-#if DEBUG == 1
+
+#if TESTSOCKET == 0
+	closeudpsocket(testsocket);
+	free(testsocket);
+#endif
+
+
+#if MP3 == 0
 	free(mp3encoder);
 #endif
 	free(transmitter_socket);

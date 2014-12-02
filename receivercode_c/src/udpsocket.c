@@ -43,6 +43,12 @@ void udp_senddata_float(struct udp_socket* inputsocket, struct liquidobjects* sd
 //	fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
 
 }
+void udp_senddata_test(struct udp_socket* inputsocket, struct rtlsdrstruct* rtl) {
+
+	sendto(inputsocket->sockfd, rtl->buffer, sizeof(uint8_t) * rtl->receivesize, 0,
+			(struct sockaddr *) &inputsocket->servaddr, sizeof(inputsocket->servaddr));
+}
+
 
 void udp_receive(struct udp_socket* inputsocket) {
 

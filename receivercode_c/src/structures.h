@@ -1,12 +1,28 @@
 #ifndef STRUCT_H
 #define STRUCT_H
 
-#ifndef debug_macro
-#define DEBUG 0 //1  = debug mode, 0 = normal mode
+#ifndef _WRITEFILES
+#define WRITEFILES 0 //1  = debug mode, 0 = normal mode
 #endif
 
 #ifndef device
-#define DEVICE_CODE 1 //0  = beaglebone, 1 = laptop
+#define OUTPUT_DEVICE 1 //0  = beaglebone, 1 = laptop
+#endif
+
+#ifndef _AUDIO
+#define AUDIO 1 //0  = play audio, 1 = dont play audio (on the server)
+#endif
+
+#ifndef _MP3
+#define MP3 1 //0  = write mp3, 1 = dont write (on the server)
+#endif
+
+#ifndef _SDR_WRITE
+#define SDR_WRITE 0 //0 = write, 1 = dont use
+#endif
+
+#ifndef testingsocket
+#define TESTSOCKET 1 //0 = use testsocket, 1 = dont use
 #endif
 
 #include <liquid/liquid.h>
@@ -17,7 +33,7 @@
 #include <lame/lame.h>
 
 
-#if DEBUG == 1
+#if AUDIO == 0
 #include <pulse/pulseaudio.h>
 #include <pulse/simple.h>
 #include <pulse/error.h>
@@ -77,6 +93,7 @@ int cbradiofreqs[40];
 
 
 struct encoder {
+
 	lame_t lame;
 	unsigned char mp3_buffer[8192 * 21];
 	unsigned int mp3buffsize;

@@ -3,7 +3,7 @@
 void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 	int _I;
 	int _Q;
-	int x;
+	int x = 0;
 
 	//the filter can only take in one sample at a time
 	for (x = 0; x < (rtl->receivesize / 2); x++) {
@@ -21,7 +21,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			iirfilt_crcf_execute(dsp->fm_filter, x_complex, &y);
 
 #if DEBUG == 1
-			fwrite(&y, sizeof(float complex), 1, dsp->filtered);
+//			fwrite(&y, sizeof(float complex), 1, dsp->filtered);
 #endif
 
 			// run frequency demodulation
@@ -59,7 +59,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 
 	}
 
-#if DEBUG == 1
+#if WRITEFILES == 1
 	fwrite(dsp->buf_resamp, 1, sizeof(float) * dsp->buffercounter, dsp->fid_demod);
 #endif
 

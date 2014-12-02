@@ -25,7 +25,6 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 	fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
 #endif
 
-	dsp->copy_buffcounter = 0;
 
 //		udp_senddata(inputsocket, lame_encoder);
 //

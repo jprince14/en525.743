@@ -12,8 +12,10 @@ bool opensdr(struct rtlsdrstruct* sdr, struct liquidobjects* dsp) {
 		exit(1);
 	}
 
-	tune_sdr(sdr, 2000000, dsp);
-	tune_sdr(sdr, 97900000, dsp);
+//	setsamplingrate_sdr(sdr, 2000000, dsp);
+//	tune_sdr(sdr, 97000000, dsp);
+	rtlsdr_set_sample_rate(sdr->device, 2000000);
+	rtlsdr_set_center_freq(sdr->device, 97900000);
 
 	rtlsdr_set_tuner_gain_mode(sdr->device, 0);
 //	printf("Gain mode set= %d\n",retval);
@@ -32,23 +34,25 @@ void tune_sdr(struct rtlsdrstruct* sdr, uint32_t freq, struct liquidobjects* dsp
 void setsamplingrate_sdr(struct rtlsdrstruct* sdr, uint32_t freq, struct liquidobjects* dsp) {
 	dsp->sample_rate_rf = freq;
 	rtlsdr_set_sample_rate(sdr->device, freq);
+	printf("Sampling rate set to %d\n", rtlsdr_get_sample_rate(sdr->device));
 }
 
 void sdr_work(struct rtlsdrstruct* sdr) {
-	int x = rtlsdr_read_sync(sdr->device, sdr->buffer, 25 * 1024, &sdr->receivesize);
+	int x = rtlsdr_read_sync(sdr->device, sdr->buffer, 10 * 1024, &sdr->receivesize);
 	if (x < 0) {
 		printf("Samples read: %d\n", sdr->receivesize);
 		printf("Error reading from SDR\n");
-//		exit(0);
+		exit(0);
 	}
 //	rtlsdr_read_async(sdr->device, rtlsdr_callback, s, 0, s->buf_len);
 	if (sdr->receivesize == 0) {
 		printf("ERROR reading data off SDR, # Samples read: %d\n", sdr->receivesize);
 	}
 
-#if DEBUG == 1
-	printf("sdr->receivesize = %d\n", sdr->receivesize);
-	fwrite(sdr->buffer, sizeof(uint8_t), sdr->receivesize, sdr->filewrite);
+#if SDR_WRITE == 0
+//	printf("sdr->receivesize = %d\n", sdr->receivesize);
+//	printf("Sampling rate set to %d\n", rtlsdr_get_sample_rate(sdr->device));
+	fwrite(sdr->buffer, sizeof(uint8_t),  sdr->receivesize, sdr->filewrite);
 #endif
 
 }
