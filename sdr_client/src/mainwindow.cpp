@@ -37,10 +37,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
 
+	printf("deconstructor above empty queue\n");
+
 	//empty the queue
 	while (!datasocket->rcv_que->empty()) {
 		datasocket->rcv_que->pop();
 	}
+	printf("deconstructor below empty queue\n");
 
 	//send the exit command
 	uint32_t exitcommand[2];
@@ -48,10 +51,15 @@ MainWindow::~MainWindow() {
 	exitcommand[1] = 0;
 	controlsocket->sendcommand(exitcommand);
 
+	printf("deconstructor above if statement\n");
+
 	if (ui->Enable_receiver->isChecked()) {
+
 		controlsocket->closesocket();
 		datasocket->closesocket();
 	}
+
+	printf("below close sockets\n");
 
 	delete datasocket;
 	printf("data socket deleted\n");
@@ -170,12 +178,12 @@ void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
 	chmod_cmd[0] = 3;
 
 	if (index == 0) {
-		printf("Sending command for Mono-FM demodulation\n");
+		printf("Sending command for FM demodulation\n");
 		chmod_cmd[1] = 0;
+//	} else if (index == 1) {
+//		printf("Sending command for Stereo-FM demodulation\n");
+//		chmod_cmd[1] = 1;
 	} else if (index == 1) {
-		printf("Sending command for Stereo-FM demodulation\n");
-		chmod_cmd[1] = 1;
-	} else if (index == 2) {
 		printf("Sending command for CB-AM demodulation\n");
 		chmod_cmd[1] = 2;
 	}
@@ -184,11 +192,11 @@ void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
 		controlsocket->sendcommand(chmod_cmd);
 
 		//tune to the cb freq if its AM
-		if (index == 2) {
-			uint32_t chamfreq_cmd[2];
-			chamfreq_cmd[0] = 2;
-			chamfreq_cmd[1] = ui->CB_channel_box->value();
-			controlsocket->sendcommand(chamfreq_cmd);
+		if (index == 1) {
+			uint32_t cbamfreq_cmd[2];
+			cbamfreq_cmd[0] = 2;
+			cbamfreq_cmd[1] = ui->CB_channel_box->value();
+			controlsocket->sendcommand(cbamfreq_cmd);
 		}
 
 	} else {
@@ -245,7 +253,7 @@ void MainWindow::on_mp3_location_editingFinished() {
 		//only if the location has actually changed
 		if (mp3location.compare(ui->mp3_location->text().toStdString()) != 0) {
 
-			on_enable_recording_clicked(false);
+//			on_enable_recording_clicked(false);
 
 			//this will start a new recording with the new filename
 			on_enable_recording_clicked(false);
@@ -334,7 +342,10 @@ void MainWindow::on_enable_recording_clicked(bool) {
 		pthread_mutex_lock(&mp3lock);
 
 		Setmp3flag(false);
+
+		printf("before close mp3\n");
 		recordmp3_close();
+		printf("after close mp3\n");
 		fclose(mp3file);
 
 		pthread_mutex_unlock(&mp3lock);
