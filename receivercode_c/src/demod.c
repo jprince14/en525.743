@@ -20,6 +20,10 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			float complex y = 0;
 			iirfilt_crcf_execute(dsp->fm_filter, x_complex, &y);
 
+#if DEBUG == 1
+			fwrite(&y, sizeof(float complex), 1, dsp->filtered);
+#endif
+
 			// run frequency demodulation
 			freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
 //		fwrite(&dsp->buf_demod, sizeof(float), 1, dsp->fid_demod);
@@ -36,7 +40,8 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 		}
 
 		else if (dsp->demodtype == stereo_FM) {
-#warning - come back here
+			printf("stereo FM functionality not included\n");
+
 		} else if (dsp->demodtype == cb_AM) {
 			float complex y_AM = 0;
 
@@ -53,9 +58,10 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 		}
 
 	}
-//	printf("buffercounter = %d\n", dsp->buffercounter);
 
+#if DEBUG == 1
 	fwrite(dsp->buf_resamp, 1, sizeof(float) * dsp->buffercounter, dsp->fid_demod);
+#endif
 
 	dsp->copy_buffcounter = dsp->buffercounter;
 	dsp->buffercounter = 0;

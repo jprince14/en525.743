@@ -46,8 +46,10 @@ void sdr_work(struct rtlsdrstruct* sdr) {
 		printf("ERROR reading data off SDR, # Samples read: %d\n", sdr->receivesize);
 	}
 
-//	printf("sdr->receivesize = %d\n", sdr->receivesize);
+#if DEBUG == 1
+	printf("sdr->receivesize = %d\n", sdr->receivesize);
 	fwrite(sdr->buffer, sizeof(uint8_t), sdr->receivesize, sdr->filewrite);
+#endif
 
 }
 

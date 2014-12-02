@@ -1,19 +1,32 @@
 #ifndef STRUCT_H
 #define STRUCT_H
 
+#ifndef debug_macro
+#define DEBUG 0 //1  = debug mode, 0 = normal mode
+#endif
+
+#ifndef device
+#define DEVICE_CODE 1 //0  = beaglebone, 1 = laptop
+#endif
+
 #include <liquid/liquid.h>
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+
 #include <lame/lame.h>
-#include <curl/curl.h>
-#include <alsa/asoundlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <rtl-sdr.h>
+
+
+#if DEBUG == 1
 #include <pulse/pulseaudio.h>
 #include <pulse/simple.h>
 #include <pulse/error.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <rtl-sdr.h>
+
 
 #define mono_FM 0
 #define stereo_FM 1
@@ -62,15 +75,16 @@
 
 int cbradiofreqs[40];
 
+
 struct encoder {
 	lame_t lame;
 	unsigned char mp3_buffer[8192 * 21];
 	unsigned int mp3buffsize;
 	FILE * outfile; //This file is only for testing purposes to write output to a file
 
-	//Curl variables
-	CURL *curl;
-	CURLcode res;
+//	//Curl variables
+//	CURL *curl;
+//	CURLcode res;
 
 };
 
@@ -92,6 +106,7 @@ struct liquidobjects {
 	float FM_cutoff_freq_rf;   // RF cut-off frequency
 	float AM_cutoff_freq_rf;
 	FILE * fid_demod; //This file is only for testing purposes to write output to a file
+	FILE * filtered;
 	int demodtype;
 	int copy_buffcounter;
 };
@@ -125,13 +140,15 @@ struct udp_socket {
 };
 
 struct audiostruct {
-	snd_pcm_t *playback_handle;
-	snd_pcm_hw_params_t *hw_params;
+//	snd_pcm_t *playback_handle;
+//	snd_pcm_hw_params_t *hw_params;
 	int audiobuffer_size;
 	int minaudiobuffersize;
 	float audiobuffer[500];
+#if DEBUG == 1
 	pa_simple *pulsestruct;
 	pa_sample_spec pulsespec;
+#endif
 };
 
 struct rtlsdrstruct {

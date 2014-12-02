@@ -1,3 +1,6 @@
+#if DEBUG == 1
+
+
 #include "audio.h"
 
 void initializeaudio(struct audiostruct* audio) {
@@ -120,3 +123,4 @@ void closeaudio(struct audiostruct* audio) {
 	pa_simple_free(audio->pulsestruct);
 
 }
+#endif

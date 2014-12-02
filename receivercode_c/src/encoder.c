@@ -1,6 +1,6 @@
 #include "encoder.h"
 #include "udpsocket.h"
-#include <linux/soundcard.h>
+//#include <linux/sounsdcard.h>
 
 void initialize_encoder(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 	lame_encoder->lame = lame_init();
@@ -21,7 +21,9 @@ void encoder_work(struct liquidobjects* dsp, struct encoder* lame_encoder) {
 	lame_encoder->mp3buffsize = lame_encode_buffer_ieee_float(lame_encoder->lame, dsp->buf_resamp, dsp->buf_resamp,
 			dsp->copy_buffcounter, lame_encoder->mp3_buffer, 10 * 8192);
 
+#if DEBUG == 1
 	fwrite(lame_encoder->mp3_buffer, 1, lame_encoder->mp3buffsize, lame_encoder->outfile);
+#endif
 
 	dsp->copy_buffcounter = 0;
 

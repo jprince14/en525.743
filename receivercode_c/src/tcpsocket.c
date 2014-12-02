@@ -41,8 +41,6 @@ void tcp_listen(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, struct
 
 	inputsocket->bufferrunning = true;
 
-#warning - need to update this receive to it runs in a loop
-
 	int n;
 
 	//receive in loop until a disconnect is received
