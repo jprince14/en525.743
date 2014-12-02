@@ -245,10 +245,6 @@ int main(int argc, char**argv) {
 					udp_senddata_test(testsocket, rtlsdr);
 #endif
 
-
-#warning - the demod funciton is too slow which is causing issues
-printf("\n\n\n\nthe demod funciton is too slow which is causing issues\n\n\n\n\n");
-
 					demod_work(rtlsdr, processingstruct);
 					udp_senddata_float(transmitter_socket, processingstruct);
 
