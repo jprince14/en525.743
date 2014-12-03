@@ -35,7 +35,7 @@ void* c2_socketcontrol(void* ptr) {
 		printf("tcp socket opened\n");
 //		while (sdr_control->sdrstruct->receiverexitflag == false) {
 //		printf("receive loop\n");
-			tcp_listen(sdr_control->controlsocket, sdr_control->sdrstruct, sdr_control->demodstruct);
+		tcp_listen(sdr_control->controlsocket, sdr_control->sdrstruct, sdr_control->demodstruct);
 //		}
 
 //		tcp_closesocket(sdr_control->controlsocket);
@@ -132,9 +132,7 @@ void* menufunction(void* ptr) {
 			printf("Exit signal received\n");
 			sdr_control->sdrstruct->receiverexitflag = true;
 			break;
-		}
-		else
-		{
+		} else {
 			printf("Invalid command received\n");
 		}
 
@@ -150,6 +148,18 @@ void* menufunction(void* ptr) {
 }
 
 int main(int argc, char**argv) {
+
+	if (argc != 4) {
+		printf("Error 3 arguments required\nProper Usage: ./server clientip commandcontrolport dataport\n");
+		exit(0);
+	}
+
+#if WRITEFILES == 1
+	int x;
+	for (x = 1; x < 4; x++) {
+		printf("arg %d = %s\n", x, argv[x]);
+	}
+#endif
 
 	pthread_t menuthread;
 
@@ -189,24 +199,23 @@ int main(int argc, char**argv) {
 	controlstruct->sdrstruct = rtlsdr;
 	controlstruct->controlsocket = c2socket;
 
-
 #if OUTPUT_DEVICE == 0 //beaglebone
-	tcp_setaddress(c2socket, "192.168.12.1");
-	tcp_setport(c2socket, 1234);
+	tcp_setaddress(c2socket, argv[1]);
+	tcp_setport(c2socket, atoi(argv[2]));
 	tcp_createsocket(c2socket);
 
-	udp_setaddress(transmitter_socket, "192.168.12.1");
-	udp_setport(transmitter_socket, 5678);
+	udp_setaddress(transmitter_socket, argv[1]);
+	udp_setport(transmitter_socket, atoi(argv[3]));
 	udp_createsocket(transmitter_socket);
 #endif
 
 #if OUTPUT_DEVICE == 1 //laptop
-	tcp_setaddress(c2socket, "127.0.0.1");
-	tcp_setport(c2socket, 1234);
+	tcp_setaddress(c2socket, argv[1]);
+	tcp_setport(c2socket, atoi(argv[2]));
 	tcp_createsocket(c2socket);
 
-	udp_setaddress(transmitter_socket, "127.0.0.1");
-	udp_setport(transmitter_socket, 5678);
+	udp_setaddress(transmitter_socket, argv[1]);
+	udp_setport(transmitter_socket, atoi(argv[3]));
 	udp_createsocket(transmitter_socket);
 #endif
 
@@ -214,7 +223,7 @@ int main(int argc, char**argv) {
 	initialize_dspobjects(processingstruct);
 
 #if AUDIO == 0
-		initializeaudio(audioobject);
+	initializeaudio(audioobject);
 #endif
 
 #if WRITEFILES == 1
@@ -260,7 +269,6 @@ int main(int argc, char**argv) {
 					encoder_work(processingstruct, mp3encoder);
 #endif
 
-
 				}
 #if MP3 == 0
 				encoder_flush(processingstruct, mp3encoder);
@@ -292,7 +300,7 @@ int main(int argc, char**argv) {
 	fclose(rtlsdr->filewrite);
 #endif
 
-#if DEBUG == 1
+#if WRITEFILES == 1
 	fclose(processingstruct->fid_demod);
 	fclose(processingstruct->filtered);
 #endif
@@ -302,7 +310,7 @@ int main(int argc, char**argv) {
 	close_encoderojects(mp3encoder);
 #endif
 
-closeudpsocket(transmitter_socket);
+	closeudpsocket(transmitter_socket);
 
 #if AUDIO == 0
 	closeaudio(audioobject);
@@ -317,7 +325,6 @@ closeudpsocket(transmitter_socket);
 	closeudpsocket(testsocket);
 	free(testsocket);
 #endif
-
 
 #if MP3 == 0
 	free(mp3encoder);
