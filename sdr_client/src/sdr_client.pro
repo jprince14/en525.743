@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = sdr_client
+TARGET = client
 TEMPLATE = app
 QMAKE_CXXFLAGS += -lpthread -lmp3lame -lpulse-simple -lpulse
 QMAKE_CFLAGS += -lpthread -lmp3lame -lpulse-simple -lpulse

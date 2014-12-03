@@ -37,13 +37,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
 
-	printf("deconstructor above empty queue\n");
+//	printf("deconstructor above empty queue\n");
 
 	//empty the queue
 	while (!datasocket->rcv_que->empty()) {
 		datasocket->rcv_que->pop();
 	}
-	printf("deconstructor below empty queue\n");
+//	printf("deconstructor below empty queue\n");
 
 	//send the exit command
 	uint32_t exitcommand[2];
@@ -59,14 +59,14 @@ MainWindow::~MainWindow() {
 		datasocket->closesocket();
 	}
 
-	printf("below close sockets\n");
+//	printf("below close sockets\n");
 
 	delete datasocket;
-	printf("data socket deleted\n");
+//	printf("data socket deleted\n");
 	delete controlsocket;
-	printf("control socket deleted\n");
+//	printf("control socket deleted\n");
 	delete ui;
-	printf("ui deleted\n");
+//	printf("ui deleted\n");
 }
 
 void MainWindow::enableall(bool flag, bool startup) {
