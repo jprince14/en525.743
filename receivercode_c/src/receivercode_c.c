@@ -33,12 +33,12 @@ void* c2_socketcontrol(void* ptr) {
 	// do I need to open before listen?
 	if (tcp_opensocket(sdr_control->controlsocket) == 0) {
 		printf("tcp socket opened\n");
-		while (sdr_control->sdrstruct->receiverexitflag == false) {
+//		while (sdr_control->sdrstruct->receiverexitflag == false) {
 //		printf("receive loop\n");
 			tcp_listen(sdr_control->controlsocket, sdr_control->sdrstruct, sdr_control->demodstruct);
-		}
+//		}
 
-		tcp_closesocket(sdr_control->controlsocket);
+//		tcp_closesocket(sdr_control->controlsocket);
 	} else {
 		printf("ERROR: Unable to open command control socket\n");
 	}
@@ -132,6 +132,10 @@ void* menufunction(void* ptr) {
 			printf("Exit signal received\n");
 			sdr_control->sdrstruct->receiverexitflag = true;
 			break;
+		}
+		else
+		{
+			printf("Invalid command received\n");
 		}
 
 		printf("\n\tEnter 1 to adjust the frequency of the SDR\n");

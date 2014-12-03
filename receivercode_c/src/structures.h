@@ -18,7 +18,7 @@
 #endif
 
 #ifndef _SDR_WRITE
-#define SDR_WRITE 0 //0 = write, 1 = dont use
+#define SDR_WRITE 1 //0 = write, 1 = dont use
 #endif
 
 #ifndef testingsocket
@@ -31,7 +31,7 @@
 #include <arpa/inet.h>
 
 #include <lame/lame.h>
-
+#include <sys/queue.h>
 
 #if AUDIO == 0
 #include <pulse/pulseaudio.h>
