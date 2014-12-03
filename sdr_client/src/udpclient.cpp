@@ -3,7 +3,7 @@
 namespace std {
 
 udpsocket::udpsocket() :
-		socketwasopenflag(false), runningflag(false), audiobufferset(false) {
+		socketwasopenflag(false), audiobufferset(false), runningflag(false) {
 	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
@@ -48,7 +48,7 @@ bool udpsocket::opensocket() {
 
 }
 
-int udpsocket::receive() {
+void udpsocket::receive() {
 	socklen_t fromlen = sizeof(servaddr);
 
 	rcv_struct.revlength = recvfrom(sockfd, (char*) &rcv_struct.rcvbuffer, 2500 * sizeof(float), 0,
@@ -56,8 +56,8 @@ int udpsocket::receive() {
 
 	rcv_que->push(rcv_struct);
 
-	if ((int) rcv_que->size() % 25 == 0) {
-		printf("rcv_que length = %d\n", rcv_que->size());
+	if ((int) rcv_que->size() % 500 == 0) {
+		printf("rcv_que length = %d\n", int(rcv_que->size()));
 
 	}
 //	printf("queue.size = %d with length %d and struct length %d\n", (int) rcv_que->size(), rcv_que->back().revlength,

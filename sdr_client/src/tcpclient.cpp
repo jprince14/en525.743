@@ -12,7 +12,6 @@ tcpsocket::tcpsocket() :
 
 void tcpsocket::assignipaddr(std::string ipaddr) {
 	servaddr.sin_addr.s_addr = inet_addr(ipaddr.c_str());
-
 }
 
 void tcpsocket::assignport(int port) {

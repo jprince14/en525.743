@@ -67,7 +67,6 @@ MainWindow::~MainWindow() {
 	printf("control socket deleted\n");
 	delete ui;
 	printf("ui deleted\n");
-
 }
 
 void MainWindow::enableall(bool flag, bool startup) {
@@ -114,6 +113,11 @@ void MainWindow::initialize_open_tcp_socket(std::tcpsocket* _socket) {
 	_socket->assignport(ui->beaglebone_port->text().toInt());
 	_socket->createsocket();
 	socketconnectflag = _socket->opensocket();
+
+	if (_socket->socketwasopenflag == true) {
+		//this will tune the sdr to the gui's current settings
+		changemodulation();
+	}
 
 }
 
@@ -167,7 +171,7 @@ void MainWindow::on_beaglebone_data_port_editingFinished() {
 
 }
 
-void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
+void MainWindow::changemodulation() {
 	//0 = mono fm
 	//1 = stereo fm
 	//2 = cm_am
@@ -177,13 +181,13 @@ void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
 	uint32_t chmod_cmd[2];
 	chmod_cmd[0] = 3;
 
-	if (index == 0) {
+	if (ui->modulation_combobox->currentIndex() == 0) {
 		printf("Sending command for FM demodulation\n");
 		chmod_cmd[1] = 0;
 //	} else if (index == 1) {
 //		printf("Sending command for Stereo-FM demodulation\n");
 //		chmod_cmd[1] = 1;
-	} else if (index == 1) {
+	} else if (ui->modulation_combobox->currentIndex() == 1) {
 		printf("Sending command for CB-AM demodulation\n");
 		chmod_cmd[1] = 2;
 	}
@@ -191,39 +195,59 @@ void MainWindow::on_modulation_combobox_currentIndexChanged(int index) {
 	if (socketconnectflag == true) {
 		controlsocket->sendcommand(chmod_cmd);
 
-		//tune to the cb freq if its AM
-		if (index == 1) {
+		//This pause is needed so the server has time to process the command to set the mod type
+		//otherwise without this sleep the tune command will be missed
+		usleep(1000);
+
+		if (ui->modulation_combobox->currentIndex() == 1) {
+			//tune to the cb freq if its AM
 			uint32_t cbamfreq_cmd[2];
 			cbamfreq_cmd[0] = 2;
 			cbamfreq_cmd[1] = ui->CB_channel_box->value();
+			printf("frequency set to CB Radio channel %d\n", ui->CB_channel_box->value());
 			controlsocket->sendcommand(cbamfreq_cmd);
+		} else if (ui->modulation_combobox->currentIndex() == 0) {
+			//tune the fm freq
+			uint32_t fmfreq_cmd[2];
+			fmfreq_cmd[0] = 1;
+			fmfreq_cmd[1] = ui->fm_freq_BOX->text().toInt();
+			controlsocket->sendcommand(fmfreq_cmd);
+			printf("Frequency set to %dHz\n", ui->fm_freq_BOX->text().toInt());
 		}
 
 	} else {
-		printf("Not connected to TCP socket yet\n");
+		printf("Not connected to TCP socket yet, unable to change modulation\n");
 	}
+}
+
+void MainWindow::on_modulation_combobox_currentIndexChanged(int) {
+	changemodulation();
 }
 
 void MainWindow::on_fm_freq_BOX_editingFinished() {
 
 	printf("current fm freq = %d\n", ui->fm_freq_BOX->text().toInt());
 
-	if (fmfreq != ui->fm_freq_BOX->text().toInt()) {
+//	if (fmfreq != ui->fm_freq_BOX->text().toInt()) {
 
-		//checking if modulation type if fm
-		if (ui->modulation_combobox->currentIndex() == 0 || ui->modulation_combobox->currentIndex() == 1) {
-			uint32_t chfmfreq_cmd[2];
-			chfmfreq_cmd[0] = 1;
-			chfmfreq_cmd[1] = ui->fm_freq_BOX->text().toInt();
+	//checking if modulation type if fm
+	if (ui->modulation_combobox->currentIndex() == 0) {
+		uint32_t chfmfreq_cmd[2];
+		chfmfreq_cmd[0] = 1;
+		chfmfreq_cmd[1] = ui->fm_freq_BOX->text().toInt();
 
-			if (socketconnectflag == true) {
-				controlsocket->sendcommand(chfmfreq_cmd);
-			} else {
-				printf("Not connected to TCP socket yet\n");
-			}
+		if (socketconnectflag == true) {
+			controlsocket->sendcommand(chfmfreq_cmd);
+		} else {
+			printf("Not connected to TCP socket yet\n");
 		}
-		fmfreq = ui->fm_freq_BOX->text().toInt();
+	} else {
+
+		printf("FM freq not sent since the modulation type is AM\n");
 	}
+
+	fmfreq = ui->fm_freq_BOX->text().toInt();
+//	}
 
 	//    arg1.toInt()
 }
@@ -233,7 +257,7 @@ void MainWindow::on_CB_channel_box_editingFinished() {
 	printf("CB Channel is %d\n", ui->CB_channel_box->value());
 
 	//first check if mod type is AM
-	if (ui->modulation_combobox->currentIndex() == 2) {
+	if (ui->modulation_combobox->currentIndex() == 1) {
 		uint32_t chamfreq_cmd[2];
 		chamfreq_cmd[0] = 2;
 		chamfreq_cmd[1] = ui->CB_channel_box->value();
@@ -243,6 +267,8 @@ void MainWindow::on_CB_channel_box_editingFinished() {
 		} else {
 			printf("Not connected to TCP socket yet\n");
 		}
+	} else {
+		printf("CB Channel not tuned since the modulation type is set as FM\n");
 	}
 }
 
@@ -394,7 +420,6 @@ void* MainWindow::receivethread(void *ptr) {
 
 	input->datasocket->Setrunningflag(true);
 
-#warning - do i need a mutex lock the the get running flag
 	while (input->datasocket->Getrunningflag() == true) {
 		input->datasocket->receive();
 
@@ -422,13 +447,13 @@ void* MainWindow::audiomp3thread(void *ptr) {
 
 		//the mp3 must come before the audio since the pop from the queue is in the audio code
 
-		pthread_mutex_lock(&input->mp3lock);
+		pthread_mutex_lock(&input->audiolock);
 		if (input->Getaudioflag() == true) {
 			//send sound to speakers
 			input->audio_play();
 
 		}
-		pthread_mutex_unlock(&input->mp3lock);
+		pthread_mutex_unlock(&input->audiolock);
 
 		if ((input->Getmp3flag() == false) && (input->Getaudioflag() == false)) {
 			//if not playing audio or recording mp3 keep buffer at 7500
@@ -480,8 +505,7 @@ void MainWindow::recordmp3_close() {
 }
 
 void MainWindow::recordmp3_work() {
-
-	if ((int) datasocket->rcv_que->size() > 2) {
+	if ((int) datasocket->rcv_que->size() > 1) {
 
 		mp3buffsize = lame_encode_buffer_ieee_float(lame, datasocket->rcv_que->front().rcvbuffer,
 				datasocket->rcv_que->front().rcvbuffer, datasocket->rcv_que->front().revlength / sizeof(float),
@@ -490,7 +514,7 @@ void MainWindow::recordmp3_work() {
 		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
 	}
 
-	//only pop off if he audio flag = false, otherwise the play audio function will pop
+	//only pop off if the audio flag = false, otherwise the play audio function will pop
 	if (Getaudioflag() == false) {
 		datasocket->rcv_que->pop();
 	}
@@ -533,7 +557,8 @@ void MainWindow::audio_play() {
 					(size_t) datasocket->rcv_que->front().revlength, &error) < 0) {
 				fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
 			}
-			datasocket->rcv_que->pop();
+				//pop the data off, the mp3 recording only will pop if play audioflag = false
+				datasocket->rcv_que->pop();
 
 		} else {
 			//do nothing and let the buffer grow til its size is the min size

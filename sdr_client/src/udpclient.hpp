@@ -42,7 +42,7 @@ public:
 	void createsocket();
 	bool opensocket();
 
-	int receive();
+	void receive();
 	void closesocket();
 
 	virtual ~udpsocket();
