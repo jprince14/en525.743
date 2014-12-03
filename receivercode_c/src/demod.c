@@ -20,12 +20,13 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			float complex y = 0;
 			iirfilt_crcf_execute(dsp->fm_filter, x_complex, &y);
 
-#if DEBUG == 1
-//			fwrite(&y, sizeof(float complex), 1, dsp->filtered);
+#if WRITEFILES == 1
+			fwrite(&y, sizeof(float complex), 1, dsp->filtered);
 #endif
 
 			// run frequency demodulation
 			freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
+
 //		fwrite(&dsp->buf_demod, sizeof(float), 1, dsp->fid_demod);
 
 // resample to 48 kHz (one input should produce either 0 or 1 output)
@@ -35,6 +36,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 					&dsp->nw_resamp);
 
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
+
 //			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
 			dsp->buffercounter += (dsp->nw_resamp);
 		}

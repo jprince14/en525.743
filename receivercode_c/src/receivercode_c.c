@@ -229,6 +229,9 @@ int main(int argc, char**argv) {
 #if WRITEFILES == 1
 	processingstruct->fid_demod = fopen("fmdemod_demod.bin", "wb");
 	processingstruct->filtered = fopen("filtered.bin", "wb");
+#endif
+
+#if MP3 == 0 && WRITEFILES == 1
 	mp3encoder->outfile = fopen("mp3output.mp3", "wb");
 #endif
 
@@ -305,8 +308,11 @@ int main(int argc, char**argv) {
 	fclose(processingstruct->filtered);
 #endif
 
-#if MP3 == 0
+#if MP3 == 0 && WRITEFILES == 1
 	fclose(mp3encoder->outfile);
+#endif
+
+#if MP3 == 0
 	close_encoderojects(mp3encoder);
 #endif
 
