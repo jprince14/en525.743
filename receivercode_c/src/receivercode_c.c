@@ -42,7 +42,9 @@ void* c2_socketcontrol(void* ptr) {
 	} else {
 		printf("ERROR: Unable to open command control socket\n");
 	}
-	return NULL;
+//	return NULL;
+	pthread_exit(NULL);
+
 }
 
 void* menufunction(void* ptr) {
@@ -51,7 +53,7 @@ void* menufunction(void* ptr) {
 
 	printf("Welcome to Jeremy's EN525.743 Embedded Development Project\n");
 	printf("\tEnter 1 to adjust the frequency of the SDR\n");
-	printf("\tEnter 2 to adjust the sampling rate of the SDR\n");
+//	printf("\tEnter 2 to adjust the sampling rate of the SDR\n");
 	printf("\tEnter 3 to adjust the demodulator\n");
 	printf("\tEnter 4 to adjust the CB Channel\n");
 	printf("\tEnter 9 to exit\n");
@@ -78,7 +80,7 @@ void* menufunction(void* ptr) {
 		}
 		if (x == 3) {
 			int fmoption;
-			printf("Demodulation options:\n1:FM-Mono(default)\n2:FM-Stereo\n3:AM-(CB Radio)\n");
+			printf("Demodulation options:\n1:FM-Mono(default)\n3:AM-(CB Radio)\n");
 			scanf("%d", &fmoption);
 
 			if (fmoption == 1) {
@@ -92,17 +94,17 @@ void* menufunction(void* ptr) {
 					sdr_control->demodstruct->demodtype = mono_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
-			} else if (fmoption == 2) {
-				if (sdr_control->demodstruct->demodtype == stereo_FM) {
-					printf("Demod type is already set to FM-stereo\n");
-				} else {
-					printf("Enter the desired tuning frequency (in Hz)\n");
-					uint32_t freq;
-					scanf("%d", &freq);
-					tune_sdr(sdr_control->sdrstruct, freq, sdr_control->demodstruct);
-					sdr_control->demodstruct->demodtype = stereo_FM;
-					sdr_control->demodstruct->buffercounter = 0;
-				}
+//			} else if (fmoption == 2) {
+//				if (sdr_control->demodstruct->demodtype == stereo_FM) {
+//					printf("Demod type is already set to FM-stereo\n");
+//				} else {
+//					printf("Enter the desired tuning frequency (in Hz)\n");
+//					uint32_t freq;
+//					scanf("%d", &freq);
+//					tune_sdr(sdr_control->sdrstruct, freq, sdr_control->demodstruct);
+//					sdr_control->demodstruct->demodtype = stereo_FM;
+//					sdr_control->demodstruct->buffercounter = 0;
+//				}
 			} else if (fmoption == 3) {
 				if (sdr_control->demodstruct->demodtype == cb_AM) {
 					printf("Demod type is already set to AM (CB)\n");
@@ -144,7 +146,9 @@ void* menufunction(void* ptr) {
 
 	}
 
-	return NULL;
+//	return NULL;
+	pthread_exit(NULL);
+
 }
 
 int main(int argc, char**argv) {
@@ -277,6 +281,8 @@ int main(int argc, char**argv) {
 				encoder_flush(processingstruct, mp3encoder);
 #endif
 				pthread_join(menuthread, NULL);
+				pthread_join(commandtcpsocket, NULL);
+
 
 //TODO Update so that the user can enter the IP and Port through the GUI
 			} else {

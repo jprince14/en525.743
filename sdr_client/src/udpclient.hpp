@@ -10,9 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
-
-
-
+#include <pthread.h>
 
 namespace std {
 
@@ -26,6 +24,8 @@ public:
 	bool socketwasopenflag;
 	void Setrunningflag(bool);
 	bool Getrunningflag();
+
+	pthread_mutex_t queuelock;
 
 	struct receivestruct {
 		unsigned int revlength;

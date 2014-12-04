@@ -13,6 +13,11 @@ void tcp_createsocket(struct tcp_socket* inputsocket) {
 //    bzero((char *) &inputsocket->servaddr, sizeof(inputsocket->servaddr));
 	inputsocket->servaddr.sin_family = AF_INET;
 
+	struct timeval tv;
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+	setsockopt(inputsocket->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(struct timeval));
+
 }
 
 int tcp_opensocket(struct tcp_socket* inputsocket) {
@@ -35,34 +40,39 @@ void tcp_listen(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, struct
 
 	while (sdr->receiverexitflag == false) {
 
+		bool connected = false;
+
 		inputsocket->newsockfd = accept(inputsocket->sockfd, (struct sockaddr *) &inputsocket->cli_addr,
 				&inputsocket->clilen);
 		if (inputsocket->newsockfd < 0) {
-			printf("ERROR on accept\n");
+			//Waiting for connectoin
+//			printf("Waiting for connection\n");
 		} else {
 			printf("Client Accepted!\n");
+			connected = true;
 		}
 
-
-		bool connected = true;
-		while (connected == true) {
+		while ((connected == true) && (sdr->receiverexitflag == false)) {
 			int n;
 			bzero(inputsocket->receivebuffer, (100 * sizeof(uint32_t)));
 			//receive in loop until a disconnect is received
 			n = read(inputsocket->newsockfd, inputsocket->receivebuffer, (1000 * sizeof(char)));
 
 			if (n < 0) {
-				printf("ERROR reading from socket");
+//				printf("ERROR reading from socket");
+				//it was a timeout do nothing
+			} else {
+				//command received, process command
+
+				uint32_t part1;
+				uint32_t part2;
+				memcpy(&part1, inputsocket->receivebuffer, 4);
+				memcpy(&part2, inputsocket->receivebuffer + 4, 4);
+
+				printf("Command received; %d:%d\n", part1, part2);
+
+				connected = processcommand(inputsocket, sdr, dsp, part1, part2);
 			}
-
-			uint32_t part1;
-			uint32_t part2;
-			memcpy(&part1, inputsocket->receivebuffer, 4);
-			memcpy(&part2, inputsocket->receivebuffer + 4, 4);
-
-			printf("Command received; %d:%d\n", part1, part2);
-
-			connected = processcommand(inputsocket, sdr, dsp, part1, part2);
 		}
 	}
 
@@ -78,9 +88,9 @@ bool processcommand(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, st
 		if (part2 == 0) {
 			printf("Modulation type set to FM-mono\n");
 			dsp->demodtype = mono_FM;
-		} else if (part2 == 1) {
-			printf("Modulation type set to FM-stereo\n");
-			dsp->demodtype = stereo_FM;
+//		} else if (part2 == 1) {
+//			printf("Modulation type set to FM-stereo\n");
+//			dsp->demodtype = stereo_FM;
 		} else if (part2 == 2) {
 			printf("Modulation type set to CB-AM\n");
 			dsp->demodtype = cb_AM;

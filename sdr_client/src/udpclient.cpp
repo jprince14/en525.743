@@ -9,6 +9,10 @@ udpsocket::udpsocket() :
 	bzero(&servaddr, sizeof(servaddr));
 	rcv_que = new std::queue<receivestruct>;
 
+	if (pthread_mutex_init(&queuelock, NULL) != 0) {
+		printf("ERROR: Unable to open queuelock\n");
+	}
+
 }
 
 void udpsocket::assignipaddr(std::string ipaddr) {
@@ -53,9 +57,11 @@ void udpsocket::receive() {
 
 	rcv_struct.revlength = recvfrom(sockfd, (char*) &rcv_struct.rcvbuffer, 2500 * sizeof(float), 0,
 			(struct sockaddr *) &servaddr, &fromlen);
+	pthread_mutex_lock(&queuelock);
 
 	rcv_que->push(rcv_struct);
 
+	pthread_mutex_unlock(&queuelock);
 	if ((int) rcv_que->size() % 500 == 0) {
 		printf("rcv_que length = %d\n", int(rcv_que->size()));
 
@@ -76,12 +82,18 @@ bool udpsocket::Getrunningflag() {
 udpsocket::~udpsocket() {
 // TODO Auto-generated destructor stub
 
-//	delete rcv_struct;
+	//empty the queue
+		pthread_mutex_lock(&queuelock);
 
-//	printf("rcv_struct deleted\n");
+		//empty the receive queue
+		while (!rcv_que->empty()) {
+			rcv_que->pop();
+		}
+		pthread_mutex_unlock(&queuelock);
+
+	pthread_mutex_destroy(&queuelock);
 
 	delete rcv_que;
-	printf("rcv_que deleted\n");
 }
 
 } /* namespace std */

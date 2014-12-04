@@ -64,6 +64,7 @@ public:
 	void restartspeakers(bool);
 	void restartmp3(bool);
 	void changemodulation();
+	void restartrecording(bool);
 
 //	/http://freedesktop.org/software/pulseaudio/doxygen/simple.html#overv_sec
 
@@ -75,7 +76,7 @@ private slots:
 
 	void on_beaglebone_port_editingFinished();
 
-	void on_modulation_combobox_currentIndexChanged(int );
+	void on_modulation_combobox_currentIndexChanged(int);
 
 	void on_fm_freq_BOX_editingFinished();
 

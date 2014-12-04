@@ -37,36 +37,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
 
-//	printf("deconstructor above empty queue\n");
-
-	//empty the queue
-	while (!datasocket->rcv_que->empty()) {
-		datasocket->rcv_que->pop();
-	}
-//	printf("deconstructor below empty queue\n");
-
-	//send the exit command
+//send the exit command
 	uint32_t exitcommand[2];
 	exitcommand[0] = 4;
 	exitcommand[1] = 0;
 	controlsocket->sendcommand(exitcommand);
 
-	printf("deconstructor above if statement\n");
-
 	if (ui->Enable_receiver->isChecked()) {
-
 		controlsocket->closesocket();
 		datasocket->closesocket();
 	}
 
-//	printf("below close sockets\n");
+	pthread_mutex_destroy(&audiolock);
+
+	pthread_mutex_destroy(&mp3lock);
 
 	delete datasocket;
-//	printf("data socket deleted\n");
 	delete controlsocket;
-//	printf("control socket deleted\n");
 	delete ui;
-//	printf("ui deleted\n");
 }
 
 void MainWindow::enableall(bool flag, bool startup) {
@@ -282,11 +270,13 @@ void MainWindow::on_mp3_location_editingFinished() {
 //			on_enable_recording_clicked(false);
 
 			//this will start a new recording with the new filename
-			on_enable_recording_clicked(false);
+			//If a recording is not in progress this wont run
+			restartrecording(true);
 
 			mp3location = ui->mp3_location->text().toStdString();
 		}
 	} else {
+		//No recording is in progress
 		//do nothing, the new parameters will take effect after the recording is initialized
 	}
 }
@@ -355,7 +345,22 @@ void MainWindow::restartmp3(bool flag) {
 	}
 }
 
-void MainWindow::on_enable_recording_clicked(bool) {
+void MainWindow::restartrecording(bool mp3locationchanged) {
+
+	if (mp3locationchanged == true) {
+		//close down the recording, it will open back up below
+		pthread_mutex_lock(&mp3lock);
+
+		Setmp3flag(false);
+
+		printf("before close mp3\n");
+		recordmp3_close();
+		printf("after close mp3\n");
+		fclose(mp3file);
+
+		pthread_mutex_unlock(&mp3lock);
+
+	}
 
 	if (ui->enable_recording->isChecked() == true) {
 		pthread_mutex_lock(&mp3lock);
@@ -375,8 +380,14 @@ void MainWindow::on_enable_recording_clicked(bool) {
 		fclose(mp3file);
 
 		pthread_mutex_unlock(&mp3lock);
-
 	}
+
+}
+
+void MainWindow::on_enable_recording_clicked(bool) {
+
+	restartrecording(false);
+
 }
 
 void MainWindow::restartoutput() {
@@ -427,7 +438,9 @@ void* MainWindow::receivethread(void *ptr) {
 
 	printf("receive thread has exited\n");
 
-	return NULL;
+//	return NULL;
+	pthread_exit(NULL);
+
 }
 
 void* MainWindow::audiomp3thread(void *ptr) {
@@ -458,14 +471,29 @@ void* MainWindow::audiomp3thread(void *ptr) {
 		if ((input->Getmp3flag() == false) && (input->Getaudioflag() == false)) {
 			//if not playing audio or recording mp3 keep buffer at 7500
 			if ((int) input->datasocket->rcv_que->size() > 7500) {
+
+				pthread_mutex_lock(&input->datasocket->queuelock);
+
 				input->datasocket->rcv_que->pop();
+
+				pthread_mutex_unlock(&input->datasocket->queuelock);
 			}
 		}
+
+//		//check is the queue is in a proper state
+//		if (((int) datasocket->rcv_que->size() > 8000) || ((int) datasocket->rcv_que->size() < -10)) {
+//			printf("\nERROR: Receive Queue Corrupted\n\n");
+//			printf("Receive Queue Length = %d\n", (int) datasocket->rcv_que->size());
+//			//disable receiver
+//			ui->Enable_receiver->setEnabled(false);
+//			exit(0);
+//		}
 	}
 
 	printf("output thread has exited\n");
 
-	return NULL;
+//	return NULL;
+	pthread_exit(NULL);
 
 }
 
@@ -505,12 +533,15 @@ void MainWindow::recordmp3_close() {
 }
 
 void MainWindow::recordmp3_work() {
-	if ((int) datasocket->rcv_que->size() > 1) {
+	if ((int) datasocket->rcv_que->size() > 2) {
+
+		pthread_mutex_lock(&datasocket->queuelock);
 
 		mp3buffsize = lame_encode_buffer_ieee_float(lame, datasocket->rcv_que->front().rcvbuffer,
 				datasocket->rcv_que->front().rcvbuffer, datasocket->rcv_que->front().revlength / sizeof(float),
 				mp3buffer, 10240);
 
+		pthread_mutex_unlock(&datasocket->queuelock);
 		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
 	}
 
@@ -552,22 +583,31 @@ void MainWindow::audio_play() {
 
 //		printf("audio length = %d\n", socket->rcv_que->front().revlength);
 
-		if ((int) datasocket->rcv_que->size() > 1) {
+		pthread_mutex_lock(&datasocket->queuelock);
+
+		if ((int) datasocket->rcv_que->size() > 2) {
 			if (pa_simple_write(pulsestruct, datasocket->rcv_que->front().rcvbuffer,
 					(size_t) datasocket->rcv_que->front().revlength, &error) < 0) {
 				fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
 			}
-				//pop the data off, the mp3 recording only will pop if play audioflag = false
-				datasocket->rcv_que->pop();
+			//pop the data off, the mp3 recording only will pop if play audioflag = false
+			datasocket->rcv_que->pop();
 
 		} else {
 			//do nothing and let the buffer grow til its size is the min size
+
 		}
+		pthread_mutex_unlock(&datasocket->queuelock);
+
 	} else {
 		//this is the initial buffer size
+		pthread_mutex_lock(&datasocket->queuelock);
+
 		if ((int) datasocket->rcv_que->size() > 500) {
 			datasocket->audiobufferset = true;
 		}
+		pthread_mutex_unlock(&datasocket->queuelock);
+
 	}
 }
 
