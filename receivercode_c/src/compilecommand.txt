@@ -1,0 +1,2 @@
+gcc -Wall receivercode_c.c audio.c demod.c encoder.c sdr.c tcpsocket.c udpsocket.c -o compiled -lm -lc -lliquid -lrtlsdr -lmp3lame -lasound -lpthread -lpulse-simple -lpulse
+
