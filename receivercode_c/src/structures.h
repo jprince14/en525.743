@@ -30,7 +30,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#if mp3 == 0
 #include <lame/lame.h>
+#endif
+
 #include <sys/queue.h>
 
 #if AUDIO == 0
