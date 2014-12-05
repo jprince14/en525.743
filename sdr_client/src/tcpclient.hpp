@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
+#include <pthread.h>
 
 struct commandstructure {
 	uint32_t cmd;
@@ -23,6 +24,8 @@ public:
 
 	struct sockaddr_in servaddr;
 	int sockfd;
+	fd_set fdset;
+	struct timeval tv;
 	bool socketwasopenflag;
 
 	void assignipaddr(std::string);
@@ -34,6 +37,9 @@ public:
 	int receive(char*);
 	void closesocket();
 	void sendcommand(uint32_t command[2]);
+
+	pthread_mutex_t tcprunninglock;
+    fd_set  rset, wset;
 
 	virtual ~tcpsocket();
 private:

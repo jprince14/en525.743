@@ -18,6 +18,9 @@ class udpsocket {
 public:
 	udpsocket();
 
+
+	pthread_mutex_t udprunninglock;
+
 	struct sockaddr_in servaddr;
 	int sockfd;
 	float receivebuffer[10000];

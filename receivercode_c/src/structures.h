@@ -5,10 +5,6 @@
 #define WRITEFILES 0 //1  = debug mode, 0 = normal mode
 #endif
 
-#ifndef device
-#define OUTPUT_DEVICE 1 //0  = beaglebone, 1 = laptop
-#endif
-
 #ifndef _AUDIO
 #define AUDIO 1 //0  = play audio, 1 = dont play audio (on the server)
 #endif
@@ -182,7 +178,10 @@ struct rtlsdrstruct {
 	uint8_t buffer[75 * 1024];
 	int receivesize;
 	bool receiverexitflag;
+	bool sendaudio;
 	FILE * filewrite; //This file is only for testing purposes to write output to a file
+	pthread_mutex_t sdrlock;
+
 
 };
 

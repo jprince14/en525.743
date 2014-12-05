@@ -106,20 +106,43 @@ bool processcommand(struct tcp_socket* inputsocket, struct rtlsdrstruct* sdr, st
 		returnFlag = true;
 	}
 
-	if (part1 == 2) {
+	else if (part1 == 2) {
 //set cb channel
 		set_cb_freq_sdr(sdr, part2, dsp);
 		printf("SDR Tuned to CB channel %d\n", part2);
 		returnFlag = true;
 	}
 
-	if (part1 == 4) {
+	else if (part1 == 4) {
 		//Exit
 //		inputsocket->bufferrunning = false;
 //		sdr->receiverexitflag = true;
 		printf("Receiver has exited, waiting for new receivers\n");
 		returnFlag = false;
 	}
+	else if (part1 == 4)
+	{
+		printf("Enter 1 to send IQ Data and 2 to sent Audio\n");
+		int dataoption;
 
+		scanf("%d", &dataoption);
+
+		if (part2 == 0) {
+			printf("Now sending PCM Audio\n");
+			pthread_mutex_lock(&sdr->sdrlock);
+			//send the raw IQ data
+			sdr->sendaudio = false;
+			pthread_mutex_lock(&sdr->sdrlock);
+
+		} else if (part2 == 1) {
+			printf("Now sending RAW IQ data\n");
+			pthread_mutex_lock(&sdr->sdrlock);
+			//send the raw IQ data
+			sdr->sendaudio = true;
+			pthread_mutex_lock(&sdr->sdrlock);
+
+		}
+
+	}
 	return returnFlag;
 }

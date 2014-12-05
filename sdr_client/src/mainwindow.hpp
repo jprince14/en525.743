@@ -60,11 +60,12 @@ public:
 	void audio_play();
 	void audio_init();
 	void audio_close();
-	void restartoutput();
+	void restartoutput(int);
 	void restartspeakers(bool);
 	void restartmp3(bool);
 	void changemodulation();
 	void restartrecording(bool);
+	void changesenddatatype();
 
 //	/http://freedesktop.org/software/pulseaudio/doxygen/simple.html#overv_sec
 
@@ -90,6 +91,11 @@ private slots:
 
 	void on_beaglebone_data_port_editingFinished();
 
+	void on_Client_IP_editingFinished();
+
+	void on_Receive_data_type_currentIndexChanged(int);
+
+
 private:
 	Ui::MainWindow *ui;
 	bool recordmp3;
@@ -97,6 +103,7 @@ private:
 	int dataport;
 	int controlport;
 	std::string beagleip;
+	std::string clientip;
 	std::string mp3location;
 	int fmfreq;
 }

@@ -53,7 +53,7 @@ void* menufunction(void* ptr) {
 
 	printf("Welcome to Jeremy's EN525.743 Embedded Development Project\n");
 	printf("\tEnter 1 to adjust the frequency of the SDR\n");
-//	printf("\tEnter 2 to adjust the sampling rate of the SDR\n");
+	printf("\tEnter 2 to adjust the change between sending IQ data and audio\n");
 	printf("\tEnter 3 to adjust the demodulator\n");
 	printf("\tEnter 4 to adjust the CB Channel\n");
 	printf("\tEnter 9 to exit\n");
@@ -71,12 +71,26 @@ void* menufunction(void* ptr) {
 
 		// adjust sampling rate
 		if (x == 2) {
-//TODO print out the potential sampling rates of the tuner
-			printf("Enter the desired sampling rate (in Hz)\n");
-			uint32_t samplingrate;
-			scanf("%d", &samplingrate);
 
-			setsamplingrate_sdr(sdr_control->sdrstruct, samplingrate, sdr_control->demodstruct);
+			printf("Enter 1 to send IQ Data and 2 to sent Audio\n");
+			int dataoption;
+
+			scanf("%d", &dataoption);
+
+			if (dataoption == 1) {
+				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
+				//send the raw IQ data
+				sdr_control->sdrstruct->sendaudio = false;
+				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
+
+			} else if (dataoption == 2) {
+
+				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
+				//send the raw IQ data
+				sdr_control->sdrstruct->sendaudio = true;
+				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
+
+			}
 		}
 		if (x == 3) {
 			int fmoption;
@@ -203,7 +217,6 @@ int main(int argc, char**argv) {
 	controlstruct->sdrstruct = rtlsdr;
 	controlstruct->controlsocket = c2socket;
 
-#if OUTPUT_DEVICE == 0 //beaglebone
 	tcp_setaddress(c2socket, argv[1]);
 	tcp_setport(c2socket, atoi(argv[2]));
 	tcp_createsocket(c2socket);
@@ -211,19 +224,13 @@ int main(int argc, char**argv) {
 	udp_setaddress(transmitter_socket, argv[1]);
 	udp_setport(transmitter_socket, atoi(argv[3]));
 	udp_createsocket(transmitter_socket);
-#endif
 
-#if OUTPUT_DEVICE == 1 //laptop
-	tcp_setaddress(c2socket, argv[1]);
-	tcp_setport(c2socket, atoi(argv[2]));
-	tcp_createsocket(c2socket);
-
-	udp_setaddress(transmitter_socket, argv[1]);
-	udp_setport(transmitter_socket, atoi(argv[3]));
-	udp_createsocket(transmitter_socket);
-#endif
+	if (pthread_mutex_init(&rtlsdr->sdrlock, NULL) != 0) {
+		printf("ERROR: Unable to open sdrlock\n");
+	}
 
 	rtlsdr->receiverexitflag = false;
+	rtlsdr->sendaudio = true;
 	initialize_dspobjects(processingstruct);
 
 #if AUDIO == 0
@@ -259,14 +266,23 @@ int main(int argc, char**argv) {
 			if (pthread_create(&commandtcpsocket, NULL, c2_socketcontrol, controlstruct) == 0) {
 
 				while (rtlsdr->receiverexitflag == false) {
+
 					sdr_work(rtlsdr);
 
 #if TESTSOCKET == 0
 					udp_senddata_test(testsocket, rtlsdr);
 #endif
 
-					demod_work(rtlsdr, processingstruct);
-					udp_senddata_float(transmitter_socket, processingstruct);
+					pthread_mutex_lock(&rtlsdr->sdrlock);
+
+					if (rtlsdr->sendaudio == true) {
+						demod_work(rtlsdr, processingstruct);
+						udp_senddata_float(transmitter_socket, processingstruct);
+					} else {
+						//send the raw IQ data
+						udp_senddata_IQ(transmitter_socket, rtlsdr);
+					}
+					pthread_mutex_unlock(&rtlsdr->sdrlock);
 
 #if AUDIO == 0
 					playaudio(processingstruct, audioobject);
@@ -282,7 +298,6 @@ int main(int argc, char**argv) {
 #endif
 				pthread_join(menuthread, NULL);
 				pthread_join(commandtcpsocket, NULL);
-
 
 //TODO Update so that the user can enter the IP and Port through the GUI
 			} else {
@@ -328,6 +343,8 @@ int main(int argc, char**argv) {
 	closeaudio(audioobject);
 	free(audioobject);
 #endif
+
+	pthread_mutex_destroy(&rtlsdr->sdrlock);
 
 	free(controlstruct);
 	free(rtlsdr);

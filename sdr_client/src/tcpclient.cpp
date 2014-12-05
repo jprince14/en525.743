@@ -8,6 +8,10 @@ tcpsocket::tcpsocket() :
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
 
+	if (pthread_mutex_init(&tcprunninglock, NULL) != 0) {
+		printf("ERROR: Unable to open TCP running lock\n");
+	}
+
 }
 
 void tcpsocket::assignipaddr(std::string ipaddr) {
@@ -24,6 +28,11 @@ void tcpsocket::createsocket() {
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
+	struct timeval tv;
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+	setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char*) &tv, sizeof(struct timeval));
+
 	socketwasopenflag = true;
 }
 
@@ -31,22 +40,27 @@ void tcpsocket::closesocket() {
 	printf("tcpclosesocket was run\n");
 
 	runningflag = false;
+	close(sockfd);
 
-	if (socketwasopenflag == true) {
-		close(sockfd);
-	}
+//	if (socketwasopenflag == true) {
+//	}
 	socketwasopenflag = false;
 
 }
 
 bool tcpsocket::opensocket() {
 	bool returnFlag = false;
+
+	socketwasopenflag = false;
+
 	if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == 0) {
 		//Success opening socket
 		returnFlag = true;
-	}
-	socketwasopenflag = true;
+		socketwasopenflag = true;
 
+	}
+
+	printf("TCP socket return flag = %s\n", returnFlag ? "true" : "false");
 	return returnFlag;
 
 }
@@ -76,13 +90,26 @@ int tcpsocket::receive(char* passedinbuffer) {
 }
 
 void tcpsocket::Setrunningflag(bool input) {
+	pthread_mutex_lock(&tcprunninglock);
+
 	runningflag = input;
+	pthread_mutex_unlock(&tcprunninglock);
+
 }
 bool tcpsocket::Getrunningflag() {
-	return runningflag;
+
+	pthread_mutex_lock(&tcprunninglock);
+
+	bool flag = runningflag;
+	pthread_mutex_unlock(&tcprunninglock);
+	return flag;
+
 }
 
 tcpsocket::~tcpsocket() {
+
+	pthread_mutex_destroy(&tcprunninglock);
+
 // TODO Auto-generated destructor stub
 
 }

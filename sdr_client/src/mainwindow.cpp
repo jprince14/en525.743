@@ -1,6 +1,7 @@
+#include "mainwindow.hpp"
+
 #include "ui_mainwindow.h"
 #include "tcpclient.hpp"
-#include "mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
 		QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -17,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	dataport = ui->beaglebone_data_port->text().toInt();
 	controlport = ui->beaglebone_port->text().toInt();
 	beagleip = ui->beaglebone_ip->text().toStdString();
+	clientip = ui->Client_IP->text().toStdString();
 	mp3location = ui->mp3_location->text().toStdString();
 	fmfreq = ui->fm_freq_BOX->text().toInt();
 
@@ -37,15 +39,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
 
-//send the exit command
-	uint32_t exitcommand[2];
-	exitcommand[0] = 4;
-	exitcommand[1] = 0;
-	controlsocket->sendcommand(exitcommand);
-
 	if (ui->Enable_receiver->isChecked()) {
+
+		//send the exit command
+		uint32_t exitcommand[2];
+		exitcommand[0] = 4;
+		exitcommand[1] = 0;
+		controlsocket->sendcommand(exitcommand);
+
 		controlsocket->closesocket();
 		datasocket->closesocket();
+
+		//wait for the threads to close before continuing
+
+		if (datasocket->Getrunningflag() == true) {
+			pthread_join(receive_pthread, NULL);
+			pthread_join(output_pthread, NULL);
+
+		}
 	}
 
 	pthread_mutex_destroy(&audiolock);
@@ -58,35 +69,68 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::enableall(bool flag, bool startup) {
-	ui->beaglebone_ip->setEnabled(flag);
-	ui->beaglebone_port->setEnabled(flag);
+
+//	printf("location 0-1\n");
+
+	ui->beaglebone_ip->setEnabled(true);
+	ui->beaglebone_port->setEnabled(true);
+//	printf("location 0-2\n");
 	ui->CB_channel_box->setEnabled(flag);
 	ui->cb_channel_label->setEnabled(flag);
 	ui->cb_channel_label->setEnabled(flag);
 	ui->enable_recording->setEnabled(flag);
 	ui->enable_speakers->setEnabled(flag);
 	ui->fm_freq_BOX->setEnabled(flag);
+//	printf("location 0-3\n");
 	ui->fm_freq_label->setEnabled(flag);
-	ui->ip_label->setEnabled(flag);
+	ui->ip_label->setEnabled(true);
 	ui->modulationtype_label->setEnabled(flag);
 	ui->modulation_combobox->setEnabled(flag);
-	ui->mp3_location->setEnabled(flag);
-	ui->mp3_location_label->setEnabled(flag);
-	ui->port_label->setEnabled(flag);
-	ui->output_label->setEnabled(flag);
-	ui->data_port_label->setEnabled(flag);
-	ui->beaglebone_data_port->setEnabled(flag);
+//	printf("location 0-4\n");
+	ui->mp3_location->setEnabled(true);
+	ui->mp3_location_label->setEnabled(true);
+	ui->port_label->setEnabled(true);
+	ui->output_label->setEnabled(true);
+	ui->data_port_label->setEnabled(true);
+	ui->beaglebone_data_port->setEnabled(true);
+	ui->Client_IP_label->setEnabled(true);
+	ui->Client_IP->setEnabled(true);
+	ui->Receive_data_type->setEnabled(flag);
+	ui->receivetype_label->setEnabled(flag);
+//	printf("location 0-5\n");
 
+//printf("location 1\n");
 	if (startup == false) {
 		if (flag == true) {
+//			printf("location 1-1\n");
 
 			initialize_open_tcp_socket(controlsocket);
 			initialize_open_udp_socket(datasocket);
+//			printf("location 2\n");
+
 		}
 
 		else if (flag == false) {
+//			printf("location 1-3\n");
+
+//send the exit command
+			uint32_t exitcommand[2];
+			exitcommand[0] = 4;
+			exitcommand[1] = 0;
+			controlsocket->sendcommand(exitcommand);
+
 			datasocket->closesocket();
 			controlsocket->closesocket();
+
+//			printf("location 3\n");
+
+//wait for the threads to close before continuing
+			if (datasocket->Getrunningflag() == true) {
+
+				pthread_join(receive_pthread, NULL);
+				pthread_join(output_pthread, NULL);
+//			printf("location 4\n");
+			}
 		}
 	}
 }
@@ -94,6 +138,7 @@ void MainWindow::enableall(bool flag, bool startup) {
 void MainWindow::on_Enable_receiver_clicked() {
 //	printf("on_Enable_receiver_clicked was run\n");
 	enableall(ui->Enable_receiver->isChecked(), false);
+//	printf("enableall completed\n");
 }
 
 void MainWindow::initialize_open_tcp_socket(std::tcpsocket* _socket) {
@@ -105,6 +150,7 @@ void MainWindow::initialize_open_tcp_socket(std::tcpsocket* _socket) {
 	if (_socket->socketwasopenflag == true) {
 		//this will tune the sdr to the gui's current settings
 		changemodulation();
+		changesenddatatype();
 	}
 
 }
@@ -112,7 +158,7 @@ void MainWindow::initialize_open_tcp_socket(std::tcpsocket* _socket) {
 void MainWindow::initialize_open_udp_socket(std::udpsocket* _socket) {
 //	printf("initialize_open_udp_socket was run\n");
 
-	_socket->assignipaddr(ui->beaglebone_ip->text().toStdString());
+	_socket->assignipaddr(ui->Client_IP->text().toStdString());
 	_socket->assignport(ui->beaglebone_data_port->text().toInt());
 	_socket->createsocket();
 	_socket->opensocket();
@@ -130,33 +176,48 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* _socket) {
 }
 
 void MainWindow::on_beaglebone_ip_editingFinished() {
+	if (ui->Enable_receiver->isChecked() == true) {
+		if (beagleip.compare(ui->beaglebone_ip->text().toStdString()) != 0) {
+			restartoutput(2);
+			std::cout << "The new IP address for the beaglebone is " << ui->beaglebone_ip->text().toStdString()
+					<< std::endl;
+			beagleip = ui->beaglebone_ip->text().toStdString();
 
-	if (beagleip.compare(ui->beaglebone_ip->text().toStdString()) != 0) {
-		restartoutput();
-		std::cout << "The new IP address for the beaglebone is " << ui->beaglebone_ip->text().toStdString()
-				<< std::endl;
-		beagleip = ui->beaglebone_ip->text().toStdString();
+			printf("\n\n\n\n\nwhi is this causing the udp socket to disconnect\n\n\n\n\n");
+		}
 	}
+}
+void MainWindow::on_Client_IP_editingFinished() {
+	if (ui->Enable_receiver->isChecked() == true) {
 
+		if (clientip.compare(ui->Client_IP->text().toStdString()) != 0) {
+			restartoutput(1);
+			std::cout << "The new IP address for the client is " << ui->Client_IP->text().toStdString() << std::endl;
+			clientip = ui->Client_IP->text().toStdString();
+		}
+	}
 }
 
 void MainWindow::on_beaglebone_port_editingFinished() {
+	if (ui->Enable_receiver->isChecked() == true) {
 
-	if (controlport != ui->beaglebone_port->text().toInt()) {
-		restartoutput();
-		printf("The new control port address for the beaglebone is %d\n", ui->beaglebone_port->text().toInt());
-		controlport = ui->beaglebone_port->text().toInt();
+		if (controlport != ui->beaglebone_port->text().toInt()) {
+			restartoutput(2);
+			printf("The new control port address for the beaglebone is %d\n", ui->beaglebone_port->text().toInt());
+			controlport = ui->beaglebone_port->text().toInt();
+		}
 	}
 }
 
 void MainWindow::on_beaglebone_data_port_editingFinished() {
+	if (ui->Enable_receiver->isChecked() == true) {
 
-	if (dataport != ui->beaglebone_data_port->text().toInt()) {
-		restartoutput();
-		printf("The new data port address for the beaglebone is %d\n", ui->beaglebone_data_port->text().toInt());
-		dataport = ui->beaglebone_data_port->text().toInt();
+		if (dataport != ui->beaglebone_data_port->text().toInt()) {
+			restartoutput(1);
+			printf("The new data port address for the beaglebone is %d\n", ui->beaglebone_data_port->text().toInt());
+			dataport = ui->beaglebone_data_port->text().toInt();
+		}
 	}
-
 }
 
 void MainWindow::changemodulation() {
@@ -206,6 +267,30 @@ void MainWindow::changemodulation() {
 	} else {
 		printf("Not connected to TCP socket yet, unable to change modulation\n");
 	}
+}
+
+void MainWindow::changesenddatatype() {
+
+	if (ui->Receive_data_type->currentIndex() == 0) {
+		//send audio
+		uint32_t data[2];
+		data[0] = 5;
+		data[1] = 0;
+		controlsocket->sendcommand(data);
+
+	} else if (ui->Receive_data_type->currentIndex() == 1) {
+		//send raw IQ
+		uint32_t data[2];
+		data[0] = 5;
+		data[1] = 1;
+		controlsocket->sendcommand(data);
+	}
+}
+
+void MainWindow::on_Receive_data_type_currentIndexChanged(int) {
+
+	changesenddatatype();
+
 }
 
 void MainWindow::on_modulation_combobox_currentIndexChanged(int) {
@@ -390,37 +475,63 @@ void MainWindow::on_enable_recording_clicked(bool) {
 
 }
 
-void MainWindow::restartoutput() {
-	bool mp3checked = ui->enable_recording->isChecked();
-	bool audiochecked = ui->enable_speakers->isChecked();
+void MainWindow::restartoutput(int socket) {
+//1 = udp socket 2 = tcp socket
+	if (socket == 1) {
+		bool mp3checked = ui->enable_recording->isChecked();
+		bool audiochecked = ui->enable_speakers->isChecked();
 
-	if (mp3checked == true) {
-		restartmp3(false);
+		printf("location 1\n");
+
+		if (mp3checked == true) {
+			restartmp3(false);
+		}
+		if (audiochecked == true) {
+			restartspeakers(false);
+		}
+
+		controlsocket->Setrunningflag(false);
+		datasocket->closesocket();
+		printf("location 2\n");
+		//empty the queue
+		while (!datasocket->rcv_que->empty()) {
+			datasocket->rcv_que->pop();
+		}
+		printf("location 3\n");
+		sleep(1);
+
+		initialize_open_udp_socket(datasocket);
+
+		printf("location 4\n");
+		if (mp3checked == true) {
+			restartmp3(true);
+		}
+		printf("location 5\n");
+		if (audiochecked == true) {
+			restartspeakers(true);
+		}
+
+		printf("location 6\n");
 	}
-	if (audiochecked == true) {
-		restartspeakers(false);
+
+	else if (socket == 2) {
+		printf("location-7\n");
+		printf("location-8\n");
+		//send the exit command
+		uint32_t exitcommand[2];
+		exitcommand[0] = 4;
+		exitcommand[1] = 0;
+		printf("location-9\n");
+		controlsocket->sendcommand(exitcommand);
+
+		printf("location 10\n");
+		datasocket->Setrunningflag(false);
+		printf("location 11\n");
+		controlsocket->closesocket();
+		printf("location 12\n");
 	}
-
-	controlsocket->Setrunningflag(false);
-	datasocket->Setrunningflag(false);
-
-	//empty the queue
-	while (!datasocket->rcv_que->empty()) {
-		datasocket->rcv_que->pop();
-	}
-
-	controlsocket->closesocket();
-	datasocket->closesocket();
 
 	initialize_open_tcp_socket(controlsocket);
-	initialize_open_udp_socket(datasocket);
-
-	if (mp3checked == true) {
-		restartmp3(true);
-	}
-	if (audiochecked == true) {
-		restartspeakers(true);
-	}
 
 }
 

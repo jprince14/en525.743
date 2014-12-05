@@ -13,6 +13,10 @@ udpsocket::udpsocket() :
 		printf("ERROR: Unable to open queuelock\n");
 	}
 
+	if (pthread_mutex_init(&udprunninglock, NULL) != 0) {
+		printf("ERROR: Unable to open TCP running lock\n");
+	}
+
 }
 
 void udpsocket::assignipaddr(std::string ipaddr) {
@@ -47,6 +51,8 @@ bool udpsocket::opensocket() {
 		printf("UDP socket opened\n");
 
 		returnFlag = true;
+	} else {
+		printf("Unable to open UDP socket\n");
 	}
 	return returnFlag;
 
@@ -73,25 +79,32 @@ void udpsocket::receive() {
 }
 
 void udpsocket::Setrunningflag(bool input) {
+	pthread_mutex_lock(&udprunninglock);
 	runningflag = input;
+	pthread_mutex_unlock(&udprunninglock);
 }
 bool udpsocket::Getrunningflag() {
-	return runningflag;
+	pthread_mutex_lock(&udprunninglock);
+	bool flag = runningflag;
+	pthread_mutex_unlock(&udprunninglock);
+	return flag;
+
 }
 
 udpsocket::~udpsocket() {
 // TODO Auto-generated destructor stub
 
-	//empty the queue
-		pthread_mutex_lock(&queuelock);
+//empty the queue
+	pthread_mutex_lock(&queuelock);
 
-		//empty the receive queue
-		while (!rcv_que->empty()) {
-			rcv_que->pop();
-		}
-		pthread_mutex_unlock(&queuelock);
+	//empty the receive queue
+	while (!rcv_que->empty()) {
+		rcv_que->pop();
+	}
+	pthread_mutex_unlock(&queuelock);
 
 	pthread_mutex_destroy(&queuelock);
+	pthread_mutex_destroy(&udprunninglock);
 
 	delete rcv_que;
 }
