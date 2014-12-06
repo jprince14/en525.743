@@ -9,7 +9,7 @@
 
 struct receivestruct {
 	unsigned int revlength;
-	char rcvbuffer[2500];
+	uint8_t rcvbuffer[5000];
 };
 
 

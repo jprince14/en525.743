@@ -22,7 +22,7 @@ TEMPLATE = app
 #QMAKE_LINK_C = gcc
 #QMAKE_LINK_C_SHLIB = gcc
 
-LIBS += -lpthread -lc -lm -lliquid -lmp3lame -lpulse-simple -lpulse
+LIBS += -dsp.cc.o -lpthread -lc -lm -lliquid -lmp3lame -lpulse-simple -lpulse
 
 SOURCES += main.cpp\
         mainwindow.cpp \

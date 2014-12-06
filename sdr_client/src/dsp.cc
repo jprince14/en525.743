@@ -7,6 +7,10 @@ demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct inputstr
 
 	struct demodulateddata localresults;
 
+	printf("Input length = %d\n", inputstruct.revlength);
+
+
+
 	int _I;
 	int _Q;
 	int x = 0;
@@ -23,6 +27,8 @@ demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct inputstr
 		liquid_float_complex x_complex;
 		x_complex.real = (float) (_I - 127.0) / 128.0f;
 		x_complex.imag = (float) (_Q - 127.0) / 128.0f;
+
+		liquid_float_complex y;
 
 		if (dsp->demodtype == mono_FM) {
 			// filter result

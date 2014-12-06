@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #if dspcode == 1
 	demodulated_que = new std::queue<demodulateddata>;
 	liquidobjects = new dspobjects;
+	initialize_dspobjects(liquidobjects);
 //	results = new demodulateddata;
 
 #if IGNOREMUTEX == 1
@@ -351,6 +352,27 @@ void MainWindow::changemodulation() {
 
 void MainWindow::changesenddatatype() {
 
+	printf("\n\n\n\n\n need to update code here\n\n\n\n");
+#warning - COME BACK HERE
+
+	//empty the queue
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&datasocket->queuelock);
+#endif
+
+	//empty the receive queue
+	while (!datasocket->rcv_que->empty()) {
+		datasocket->rcv_que->pop();
+	}
+
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&datasocket->queuelock);
+#endif
+
+	//pause the audio/mp3 thread
+	//flush the udp receive buffer
+	//resume the thread
+
 	if (ui->Receive_data_type->currentIndex() == 0) {
 		//send audio
 		printf("Command sent for server to send Audio\n");
@@ -358,7 +380,7 @@ void MainWindow::changesenddatatype() {
 		data[0] = 5;
 		data[1] = 0;
 		controlsocket->sendcommand(data);
-		sleep(1);
+		usleep(10000);
 
 	} else if (ui->Receive_data_type->currentIndex() == 1) {
 		//send raw IQ
@@ -367,7 +389,7 @@ void MainWindow::changesenddatatype() {
 		data[0] = 5;
 		data[1] = 1;
 		controlsocket->sendcommand(data);
-		sleep(1);
+		usleep(10000);
 	}
 }
 
@@ -536,10 +558,10 @@ void* MainWindow::audiomp3thread(void *ptr) {
 		else if (input->ui->Receive_data_type->currentIndex() == 1) {
 
 			pthread_mutex_lock(&input->datasocket->queuelock);
-
-			input->demodulated_que->push(
-					demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
-			input->datasocket->rcv_que->pop();
+			if ((int) input->datasocket->rcv_que->size() > 2) {
+				input->demodulated_que->push(demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
+				input->datasocket->rcv_que->pop();
+			}
 			pthread_mutex_unlock(&input->datasocket->queuelock);
 
 #if IGNOREMUTEX == 1
