@@ -30,6 +30,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.hpp \
     tcpclient.hpp \
-    udpclient.hpp
+    udpclient.hpp \ 
+    structures.h
 
 FORMS    += mainwindow.ui

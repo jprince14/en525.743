@@ -20,7 +20,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			float complex y = 0;
 			iirfilt_crcf_execute(dsp->fm_filter, x_complex, &y);
 
-#if WRITEFILES == 1
+#if (WRITEFILES == 1) &&  (DEBUG_FILTER == 0)
 			fwrite(&y, sizeof(float complex), 1, dsp->filtered);
 #endif
 
@@ -37,7 +37,9 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
 
-//			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+#if WRITEFILES == 1
+			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
+#endif
 			dsp->buffercounter += (dsp->nw_resamp);
 		}
 
@@ -48,6 +50,10 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			float complex y_AM = 0;
 
 			iirfilt_crcf_execute(dsp->am_filter, x_complex, &y_AM);
+#if (WRITEFILES == 1) &&  (DEBUG_FILTER == 1)
+			fwrite(&y_AM, sizeof(float complex), 1, dsp->filtered);
+#endif
+
 
 			ampmodem_demodulate(dsp->ampdemod, y_AM, dsp->buf_demod);
 
@@ -62,7 +68,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 	}
 
 #if WRITEFILES == 1
-	fwrite(dsp->buf_resamp, 1, sizeof(float) * dsp->buffercounter, dsp->fid_demod);
+//	fwrite(dsp->buf_resamp, 1, sizeof(float) * dsp->buffercounter, dsp->fid_demod);
 #endif
 
 	dsp->copy_buffcounter = dsp->buffercounter;

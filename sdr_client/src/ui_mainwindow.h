@@ -63,7 +63,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(748, 309);
+        MainWindow->resize(748, 338);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         verticalLayout_2 = new QVBoxLayout(centralWidget);
@@ -204,6 +204,17 @@ public:
         statusBar = new QStatusBar(MainWindow);
         statusBar->setObjectName(QString::fromUtf8("statusBar"));
         MainWindow->setStatusBar(statusBar);
+        QWidget::setTabOrder(Enable_receiver, beaglebone_ip);
+        QWidget::setTabOrder(beaglebone_ip, Client_IP);
+        QWidget::setTabOrder(Client_IP, beaglebone_port);
+        QWidget::setTabOrder(beaglebone_port, beaglebone_data_port);
+        QWidget::setTabOrder(beaglebone_data_port, Receive_data_type);
+        QWidget::setTabOrder(Receive_data_type, modulation_combobox);
+        QWidget::setTabOrder(modulation_combobox, fm_freq_BOX);
+        QWidget::setTabOrder(fm_freq_BOX, CB_channel_box);
+        QWidget::setTabOrder(CB_channel_box, enable_speakers);
+        QWidget::setTabOrder(enable_speakers, enable_recording);
+        QWidget::setTabOrder(enable_recording, mp3_location);
 
         retranslateUi(MainWindow);
 
@@ -234,9 +245,9 @@ public:
         );
         data_port_label->setText(QApplication::translate("MainWindow", "BeagleBone Data Port", 0, QApplication::UnicodeUTF8));
         enable_recording->setText(QApplication::translate("MainWindow", "Record to mp3 file", 0, QApplication::UnicodeUTF8));
-        beaglebone_ip->setText(QApplication::translate("MainWindow", "192.168.12.2", 0, QApplication::UnicodeUTF8));
+        beaglebone_ip->setText(QApplication::translate("MainWindow", "127.0.0.1", 0, QApplication::UnicodeUTF8));
         output_label->setText(QApplication::translate("MainWindow", "Output", 0, QApplication::UnicodeUTF8));
-        Client_IP->setText(QApplication::translate("MainWindow", "192.168.12.1", 0, QApplication::UnicodeUTF8));
+        Client_IP->setText(QApplication::translate("MainWindow", "127.0.0.1", 0, QApplication::UnicodeUTF8));
         receivetype_label->setText(QApplication::translate("MainWindow", "Receive DataType", 0, QApplication::UnicodeUTF8));
         Receive_data_type->clear();
         Receive_data_type->insertItems(0, QStringList()

@@ -4,6 +4,12 @@
 #include <QMainWindow>
 #include "tcpclient.hpp"
 #include "udpclient.hpp"
+#include "structures.h"
+
+#if dspcode == 1
+#include "dsp.h"
+#endif
+
 #include <pthread.h>
 #include <string.h>
 #include <string>
@@ -37,14 +43,24 @@ public:
 	static void* receivethread(void*);
 	static void* audiomp3thread(void*);
 
-	bool socketconnectflag;
+//	bool socketconnectflag;
 	bool Getaudioflag();
-
 	void Setaudioflag(bool);
 	bool Getmp3flag();
 	void Setmp3flag(bool);
+
+#if IGNOREMUTEX == 1
 	pthread_mutex_t audiolock;
 	pthread_mutex_t mp3lock;
+#if dspcode == 1
+	pthread_mutex_t demodquelock;
+#endif
+#endif
+
+#if dspcode == 1
+	struct dspobjects* liquidobjects;
+#endif
+
 
 	unsigned char mp3buffer[10240];
 	lame_t lame;
@@ -54,15 +70,18 @@ public:
 	pthread_t receive_pthread;
 	pthread_t output_pthread;
 
+#if dspcode == 1
+	std::queue<demodulateddata> *demodulated_que;
+	void audio_play_dsp();
+	void recordmp3_work_dsp();
+#endif
+
 	void recordmp3_initialize();
 	void recordmp3_close();
 	void recordmp3_work();
 	void audio_play();
 	void audio_init();
 	void audio_close();
-	void restartoutput(int);
-	void restartspeakers(bool);
-	void restartmp3(bool);
 	void changemodulation();
 	void restartrecording(bool);
 	void changesenddatatype();
@@ -94,7 +113,6 @@ private slots:
 	void on_Client_IP_editingFinished();
 
 	void on_Receive_data_type_currentIndexChanged(int);
-
 
 private:
 	Ui::MainWindow *ui;

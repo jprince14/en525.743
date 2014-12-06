@@ -3,7 +3,7 @@
 namespace std {
 
 tcpsocket::tcpsocket() :
-		socketwasopenflag(false), runningflag(false) {
+		runningflag(false) {
 	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
@@ -33,7 +33,7 @@ void tcpsocket::createsocket() {
 	tv.tv_usec = 0;
 	setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char*) &tv, sizeof(struct timeval));
 
-	socketwasopenflag = true;
+//	socketwasopenflag = true;
 }
 
 void tcpsocket::closesocket() {
@@ -44,19 +44,19 @@ void tcpsocket::closesocket() {
 
 //	if (socketwasopenflag == true) {
 //	}
-	socketwasopenflag = false;
+//	socketwasopenflag = false;
 
 }
 
 bool tcpsocket::opensocket() {
 	bool returnFlag = false;
 
-	socketwasopenflag = false;
+//	socketwasopenflag = false;
 
 	if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == 0) {
 		//Success opening socket
 		returnFlag = true;
-		socketwasopenflag = true;
+//		socketwasopenflag = true;
 
 	}
 
@@ -67,7 +67,7 @@ bool tcpsocket::opensocket() {
 
 void tcpsocket::sendcommand(uint32_t command[2]) {
 
-	if (socketwasopenflag == true) {
+	if (Getrunningflag() == true) {
 //		int n;
 //		n = write(sockfd, "I got your message", 18);
 //		if (n < 0) {

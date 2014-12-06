@@ -12,6 +12,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	enableall(false, true);
 
+#if dspcode == 1
+	demodulated_que = new std::queue<demodulateddata>;
+	liquidobjects = malloc(sizeof(struct dspobjects));
+
+#if IGNOREMUTEX == 1
+	if (pthread_mutex_init(&demodquelock, NULL) != 0) {
+		printf("ERROR: Unable to open demodquelock\n");
+	}
+#endif
+
+#endif
+
+
+
 	controlsocket = new std::tcpsocket;
 	datasocket = new std::udpsocket;
 
@@ -28,40 +42,63 @@ MainWindow::MainWindow(QWidget *parent) :
 	std::cout << "mp3location = " << mp3location << std::endl;
 	std::cout << "fmfreq = " << fmfreq << std::endl;
 
+#if IGNOREMUTEX == 1
 	if (pthread_mutex_init(&audiolock, NULL) != 0) {
 		printf("ERROR: Unable to open audiolock\n");
 	}
 	if (pthread_mutex_init(&mp3lock, NULL) != 0) {
 		printf("ERROR: Unable to open mp3lock\n");
 	}
-
+#endif
 }
 
 MainWindow::~MainWindow() {
 
 	if (ui->Enable_receiver->isChecked()) {
+		if (controlsocket->Getrunningflag() == true) {
+			//send the exit command
+			uint32_t exitcommand[2];
+			exitcommand[0] = 4;
+			exitcommand[1] = 0;
+			controlsocket->sendcommand(exitcommand);
+//			controlsocket->Setrunningflag(false);
+//			controlsocket->closesocket();
+		}
 
-		//send the exit command
-		uint32_t exitcommand[2];
-		exitcommand[0] = 4;
-		exitcommand[1] = 0;
-		controlsocket->sendcommand(exitcommand);
+//		if (datasocket->Getrunningflag() == true) {
+//			datasocket->closesocket();
+////			datasocket->Setrunningflag(false);
+//		}
 
-		controlsocket->closesocket();
-		datasocket->closesocket();
+		enableall(false, false);
 
 		//wait for the threads to close before continuing
 
 		if (datasocket->Getrunningflag() == true) {
+
+#if JOINFLAG == 1
 			pthread_join(receive_pthread, NULL);
 			pthread_join(output_pthread, NULL);
-
+#endif
 		}
 	}
-
+#if IGNOREMUTEX == 1
 	pthread_mutex_destroy(&audiolock);
 
 	pthread_mutex_destroy(&mp3lock);
+#endif
+
+
+#if dspcode == 1
+	//empty the receive queue
+	while (!demodulated_que->empty()) {
+		demodulated_que->pop();
+	}
+
+	demod_close(liquidobjects);
+	free(liquidobjects);
+	delete demodulated_que;
+#endif
 
 	delete datasocket;
 	delete controlsocket;
@@ -108,6 +145,24 @@ void MainWindow::enableall(bool flag, bool startup) {
 			initialize_open_udp_socket(datasocket);
 //			printf("location 2\n");
 
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&audiolock);
+#endif
+			audio_init();
+			Setaudioflag(ui->enable_speakers->isChecked());
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&audiolock);
+#endif
+
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&mp3lock);
+#endif
+			recordmp3_initialize();
+			Setmp3flag(ui->enable_recording->isChecked());
+
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&mp3lock);
+#endif
 		}
 
 		else if (flag == false) {
@@ -119,18 +174,40 @@ void MainWindow::enableall(bool flag, bool startup) {
 			exitcommand[1] = 0;
 			controlsocket->sendcommand(exitcommand);
 
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&audiolock);
+#endif
+			Setaudioflag(false);
+			audio_close();
+
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&audiolock);
+#endif
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&mp3lock);
+#endif
+			Setmp3flag(false);
+			recordmp3_close();
+			fclose(mp3file);
+
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&mp3lock);
+#endif
+
 			datasocket->closesocket();
 			controlsocket->closesocket();
 
 //			printf("location 3\n");
 
 //wait for the threads to close before continuing
-			if (datasocket->Getrunningflag() == true) {
+//			if (datasocket->Getrunningflag() == true) {
 
-				pthread_join(receive_pthread, NULL);
-				pthread_join(output_pthread, NULL);
+#if JOINFLAG == 1
+			pthread_join(receive_pthread, NULL);
+			pthread_join(output_pthread, NULL);
+#endif
 //			printf("location 4\n");
-			}
+//			}
 		}
 	}
 }
@@ -145,9 +222,9 @@ void MainWindow::initialize_open_tcp_socket(std::tcpsocket* _socket) {
 	_socket->assignipaddr(ui->beaglebone_ip->text().toStdString());
 	_socket->assignport(ui->beaglebone_port->text().toInt());
 	_socket->createsocket();
-	socketconnectflag = _socket->opensocket();
+	_socket->Setrunningflag(_socket->opensocket());
 
-	if (_socket->socketwasopenflag == true) {
+	if (_socket->Getrunningflag() == true) {
 		//this will tune the sdr to the gui's current settings
 		changemodulation();
 		changesenddatatype();
@@ -161,7 +238,7 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* _socket) {
 	_socket->assignipaddr(ui->Client_IP->text().toStdString());
 	_socket->assignport(ui->beaglebone_data_port->text().toInt());
 	_socket->createsocket();
-	_socket->opensocket();
+	datasocket->Setrunningflag(_socket->opensocket());
 
 	//kickoff receive and process thread
 	if (pthread_create(&receive_pthread, NULL, receivethread, this) != 0) {
@@ -176,56 +253,62 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* _socket) {
 }
 
 void MainWindow::on_beaglebone_ip_editingFinished() {
-	if (ui->Enable_receiver->isChecked() == true) {
-		if (beagleip.compare(ui->beaglebone_ip->text().toStdString()) != 0) {
-			restartoutput(2);
-			std::cout << "The new IP address for the beaglebone is " << ui->beaglebone_ip->text().toStdString()
-					<< std::endl;
+	if (beagleip.compare(ui->beaglebone_ip->text().toStdString()) != 0) {
+		if (ui->Enable_receiver->isChecked() == true) {
+			printf("Unable to change BeagleBone IP while the device is enabled\n");
+			ui->beaglebone_ip->setText(QString::fromStdString(beagleip));
+		} else if (ui->Enable_receiver->isChecked() == false) {
 			beagleip = ui->beaglebone_ip->text().toStdString();
-
-			printf("\n\n\n\n\nwhi is this causing the udp socket to disconnect\n\n\n\n\n");
+			std::cout << "New BeagleBone IP set to " << beagleip << std::endl;
 		}
 	}
 }
-void MainWindow::on_Client_IP_editingFinished() {
-	if (ui->Enable_receiver->isChecked() == true) {
 
-		if (clientip.compare(ui->Client_IP->text().toStdString()) != 0) {
-			restartoutput(1);
-			std::cout << "The new IP address for the client is " << ui->Client_IP->text().toStdString() << std::endl;
+void MainWindow::on_Client_IP_editingFinished() {
+
+	if (clientip.compare(ui->Client_IP->text().toStdString()) != 0) {
+		if (ui->Enable_receiver->isChecked() == true) {
+			printf("Unable to change BeagleBone Client IP while the device is enabled\n");
+			ui->Client_IP->setText(QString::fromStdString(clientip));
+		} else if (ui->Enable_receiver->isChecked() == false) {
 			clientip = ui->Client_IP->text().toStdString();
+			std::cout << "New BeagleBone Client IP set to " << clientip << std::endl;
 		}
 	}
 }
 
 void MainWindow::on_beaglebone_port_editingFinished() {
-	if (ui->Enable_receiver->isChecked() == true) {
 
-		if (controlport != ui->beaglebone_port->text().toInt()) {
-			restartoutput(2);
-			printf("The new control port address for the beaglebone is %d\n", ui->beaglebone_port->text().toInt());
+	if (controlport != ui->beaglebone_port->text().toInt()) {
+		if (ui->Enable_receiver->isChecked() == true) {
+			printf("Unable to change BeagleBone Control Port while the device is enabled\n");
+			ui->beaglebone_port->setText(QString::number(controlport));
+		} else if (ui->Enable_receiver->isChecked() == false) {
 			controlport = ui->beaglebone_port->text().toInt();
+			std::cout << "New BeagleBone Control Port set to " << controlport << std::endl;
 		}
 	}
 }
 
 void MainWindow::on_beaglebone_data_port_editingFinished() {
-	if (ui->Enable_receiver->isChecked() == true) {
 
-		if (dataport != ui->beaglebone_data_port->text().toInt()) {
-			restartoutput(1);
-			printf("The new data port address for the beaglebone is %d\n", ui->beaglebone_data_port->text().toInt());
+	if (dataport != ui->beaglebone_data_port->text().toInt()) {
+		if (ui->Enable_receiver->isChecked() == true) {
+			printf("Unable to change BeagleBone Data Port while the device is enabled\n");
+			ui->beaglebone_data_port->setText(QString::number(dataport));
+		} else if (ui->Enable_receiver->isChecked() == false) {
 			dataport = ui->beaglebone_data_port->text().toInt();
+			std::cout << "New BeagleBone Data Port set to " << dataport << std::endl;
 		}
 	}
 }
 
 void MainWindow::changemodulation() {
-	//0 = mono fm
-	//1 = stereo fm
-	//2 = cm_am
+//0 = mono fm
+//1 = stereo fm
+//2 = cm_am
 
-	//    send modulation type then send tune freq
+//    send modulation type then send tune freq
 
 	uint32_t chmod_cmd[2];
 	chmod_cmd[0] = 3;
@@ -241,7 +324,7 @@ void MainWindow::changemodulation() {
 		chmod_cmd[1] = 2;
 	}
 
-	if (socketconnectflag == true) {
+	if (controlsocket->Getrunningflag() == true) {
 		controlsocket->sendcommand(chmod_cmd);
 
 		//This pause is needed so the server has time to process the command to set the mod type
@@ -273,6 +356,7 @@ void MainWindow::changesenddatatype() {
 
 	if (ui->Receive_data_type->currentIndex() == 0) {
 		//send audio
+		printf("Command sent for server to send Audio\n");
 		uint32_t data[2];
 		data[0] = 5;
 		data[1] = 0;
@@ -280,6 +364,7 @@ void MainWindow::changesenddatatype() {
 
 	} else if (ui->Receive_data_type->currentIndex() == 1) {
 		//send raw IQ
+		printf("Command Sent for server to send raw IQ data\n");
 		uint32_t data[2];
 		data[0] = 5;
 		data[1] = 1;
@@ -303,13 +388,13 @@ void MainWindow::on_fm_freq_BOX_editingFinished() {
 
 //	if (fmfreq != ui->fm_freq_BOX->text().toInt()) {
 
-	//checking if modulation type if fm
+//checking if modulation type if fm
 	if (ui->modulation_combobox->currentIndex() == 0) {
 		uint32_t chfmfreq_cmd[2];
 		chfmfreq_cmd[0] = 1;
 		chfmfreq_cmd[1] = ui->fm_freq_BOX->text().toInt();
 
-		if (socketconnectflag == true) {
+		if (controlsocket->Getrunningflag() == true) {
 			controlsocket->sendcommand(chfmfreq_cmd);
 		} else {
 			printf("Not connected to TCP socket yet\n");
@@ -322,20 +407,20 @@ void MainWindow::on_fm_freq_BOX_editingFinished() {
 	fmfreq = ui->fm_freq_BOX->text().toInt();
 //	}
 
-	//    arg1.toInt()
+//    arg1.toInt()
 }
 
 void MainWindow::on_CB_channel_box_editingFinished() {
 
 	printf("CB Channel is %d\n", ui->CB_channel_box->value());
 
-	//first check if mod type is AM
+//first check if mod type is AM
 	if (ui->modulation_combobox->currentIndex() == 1) {
 		uint32_t chamfreq_cmd[2];
 		chamfreq_cmd[0] = 2;
 		chamfreq_cmd[1] = ui->CB_channel_box->value();
 
-		if (socketconnectflag == true) {
+		if (controlsocket->Getrunningflag() == true) {
 			controlsocket->sendcommand(chamfreq_cmd);
 		} else {
 			printf("Not connected to TCP socket yet\n");
@@ -347,200 +432,42 @@ void MainWindow::on_CB_channel_box_editingFinished() {
 
 void MainWindow::on_mp3_location_editingFinished() {
 
-	if (Getmp3flag() == true) {
-		//this will close down the file recording currently in progress
-		//only if the location has actually changed
-		if (mp3location.compare(ui->mp3_location->text().toStdString()) != 0) {
-
-//			on_enable_recording_clicked(false);
-
-			//this will start a new recording with the new filename
-			//If a recording is not in progress this wont run
-			restartrecording(true);
-
-			mp3location = ui->mp3_location->text().toStdString();
-		}
-	} else {
-		//No recording is in progress
-		//do nothing, the new parameters will take effect after the recording is initialized
-	}
-}
-
-void MainWindow::restartspeakers(bool flag) {
-
-	if (flag == true) {
-		pthread_mutex_lock(&audiolock);
-		audio_init();
-		Setaudioflag(true);
-
-		pthread_mutex_unlock(&audiolock);
-
-	} else if (flag == false) {
-		pthread_mutex_lock(&audiolock);
-
-		//close down speakers
-
-		Setaudioflag(false);
-		audio_close();
-		datasocket->audiobufferset = false;
-		pthread_mutex_unlock(&audiolock);
+	if (ui->Enable_receiver->isChecked() == true) {
+		printf("Unable to change mp3 locaiton while the device is enabled\n");
+		ui->mp3_location->setText(QString::fromStdString(mp3location));
+	} else if (ui->Enable_receiver->isChecked() == false) {
+		mp3location = ui->mp3_location->text().toStdString();
+		std::cout << "New mp3 record location set to " << mp3location << std::endl;
 	}
 }
 
 void MainWindow::on_enable_speakers_clicked(bool) {
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&audiolock);
+#endif
+	Setaudioflag(ui->enable_speakers->isChecked());
 
-	if (ui->enable_speakers->isChecked() == true) {
-		pthread_mutex_lock(&audiolock);
-		audio_init();
-		Setaudioflag(true);
-
-		pthread_mutex_unlock(&audiolock);
-
-	} else if (ui->enable_speakers->isChecked() == false) {
-		pthread_mutex_lock(&audiolock);
-
-		//close down speakers
-
-		Setaudioflag(false);
-		audio_close();
-		datasocket->audiobufferset = false;
-		pthread_mutex_unlock(&audiolock);
-
-	}
-}
-
-void MainWindow::restartmp3(bool flag) {
-
-	if (flag == true) {
-		pthread_mutex_lock(&mp3lock);
-		recordmp3_initialize(); //mp3 file opened in this function
-		Setmp3flag(true);
-		pthread_mutex_unlock(&mp3lock);
-
-	} else if (flag == false) {
-
-		pthread_mutex_lock(&mp3lock);
-
-		Setmp3flag(false);
-		recordmp3_close();
-		fclose(mp3file);
-
-		pthread_mutex_unlock(&mp3lock);
-
-	}
-}
-
-void MainWindow::restartrecording(bool mp3locationchanged) {
-
-	if (mp3locationchanged == true) {
-		//close down the recording, it will open back up below
-		pthread_mutex_lock(&mp3lock);
-
-		Setmp3flag(false);
-
-		printf("before close mp3\n");
-		recordmp3_close();
-		printf("after close mp3\n");
-		fclose(mp3file);
-
-		pthread_mutex_unlock(&mp3lock);
-
-	}
-
-	if (ui->enable_recording->isChecked() == true) {
-		pthread_mutex_lock(&mp3lock);
-		recordmp3_initialize(); //mp3 file opened in this function
-		Setmp3flag(true);
-		pthread_mutex_unlock(&mp3lock);
-
-	} else if (ui->enable_recording->isChecked() == false) {
-
-		pthread_mutex_lock(&mp3lock);
-
-		Setmp3flag(false);
-
-		printf("before close mp3\n");
-		recordmp3_close();
-		printf("after close mp3\n");
-		fclose(mp3file);
-
-		pthread_mutex_unlock(&mp3lock);
-	}
-
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&audiolock);
+#endif
 }
 
 void MainWindow::on_enable_recording_clicked(bool) {
 
-	restartrecording(false);
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&mp3lock);
+#endif
+	Setmp3flag(ui->enable_recording->isChecked());
 
-}
-
-void MainWindow::restartoutput(int socket) {
-//1 = udp socket 2 = tcp socket
-	if (socket == 1) {
-		bool mp3checked = ui->enable_recording->isChecked();
-		bool audiochecked = ui->enable_speakers->isChecked();
-
-		printf("location 1\n");
-
-		if (mp3checked == true) {
-			restartmp3(false);
-		}
-		if (audiochecked == true) {
-			restartspeakers(false);
-		}
-
-		controlsocket->Setrunningflag(false);
-		datasocket->closesocket();
-		printf("location 2\n");
-		//empty the queue
-		while (!datasocket->rcv_que->empty()) {
-			datasocket->rcv_que->pop();
-		}
-		printf("location 3\n");
-		sleep(1);
-
-		initialize_open_udp_socket(datasocket);
-
-		printf("location 4\n");
-		if (mp3checked == true) {
-			restartmp3(true);
-		}
-		printf("location 5\n");
-		if (audiochecked == true) {
-			restartspeakers(true);
-		}
-
-		printf("location 6\n");
-	}
-
-	else if (socket == 2) {
-		printf("location-7\n");
-		printf("location-8\n");
-		//send the exit command
-		uint32_t exitcommand[2];
-		exitcommand[0] = 4;
-		exitcommand[1] = 0;
-		printf("location-9\n");
-		controlsocket->sendcommand(exitcommand);
-
-		printf("location 10\n");
-		datasocket->Setrunningflag(false);
-		printf("location 11\n");
-		controlsocket->closesocket();
-		printf("location 12\n");
-	}
-
-	initialize_open_tcp_socket(controlsocket);
-
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&mp3lock);
+#endif
 }
 
 void* MainWindow::receivethread(void *ptr) {
 	MainWindow* input = (MainWindow*) ptr;
 
 	printf("receive thread was opened\n");
-
-	input->datasocket->Setrunningflag(true);
 
 	while (input->datasocket->Getrunningflag() == true) {
 		input->datasocket->receive();
@@ -562,48 +489,102 @@ void* MainWindow::audiomp3thread(void *ptr) {
 
 	while (input->datasocket->Getrunningflag() == true) {
 
-		pthread_mutex_lock(&input->mp3lock);
-		if (input->Getmp3flag() == true) {
-			input->recordmp3_work();
-		}
+		//Process PCM Audio
+		if (input->ui->Receive_data_type->currentIndex() == 0) {
 
-		pthread_mutex_unlock(&input->mp3lock);
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&input->mp3lock);
+#endif
+			if (input->Getmp3flag() == true) {
+				input->recordmp3_work();
+			}
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&input->mp3lock);
+#endif
+			//the mp3 must come before the audio since the pop from the queue is in the audio code
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&input->audiolock);
+#endif
+			if (input->Getaudioflag() == true) {
+				//send sound to speakers
+				input->audio_play();
 
-		//the mp3 must come before the audio since the pop from the queue is in the audio code
+			}
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&input->audiolock);
+#endif
+//		pthread_mutex_lock(&input->audiolock);
+//		pthread_mutex_lock(&input->mp3lock);
 
-		pthread_mutex_lock(&input->audiolock);
-		if (input->Getaudioflag() == true) {
-			//send sound to speakers
-			input->audio_play();
-
-		}
-		pthread_mutex_unlock(&input->audiolock);
-
-		if ((input->Getmp3flag() == false) && (input->Getaudioflag() == false)) {
-			//if not playing audio or recording mp3 keep buffer at 7500
-			if ((int) input->datasocket->rcv_que->size() > 7500) {
-
+			if ((input->Getmp3flag() == false) && (input->Getaudioflag() == false)) {
+				//if not playing audio or recording mp3 keep buffer at 7500
+#if IGNOREMUTEX == 1
 				pthread_mutex_lock(&input->datasocket->queuelock);
+#endif
+				if ((int) input->datasocket->rcv_que->size() > 7500) {
 
-				input->datasocket->rcv_que->pop();
-
+					input->datasocket->rcv_que->pop();
+				}
+#if IGNOREMUTEX == 1
 				pthread_mutex_unlock(&input->datasocket->queuelock);
+#endif
+			}
+
+			//Process raw IQ data
+		}
+
+#if dspcode == 1
+		else if (input->ui->Receive_data_type->currentIndex() == 1) {
+
+			pthread_mutex_lock(&input->datasocket->queuelock);
+			input->demodulated_que->push(demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
+			input->datasocket->rcv_que->pop();
+			pthread_mutex_unlock(&input->datasocket->queuelock);
+
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&input->mp3lock);
+#endif
+			if (input->Getmp3flag() == true) {
+				input->recordmp3_work_dsp();
+			}
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&input->mp3lock);
+#endif
+			//the mp3 must come before the audio since the pop from the queue is in the audio code
+#if IGNOREMUTEX == 1
+			pthread_mutex_lock(&input->audiolock);
+#endif
+			if (input->Getaudioflag() == true) {
+				//send sound to speakers
+				input->audio_play();
+
+			}
+#if IGNOREMUTEX == 1
+			pthread_mutex_unlock(&input->audiolock);
+#endif
+//		pthread_mutex_lock(&input->audiolock);
+//		pthread_mutex_lock(&input->mp3lock);
+
+			if ((input->Getmp3flag() == false) && (input->Getaudioflag() == false)) {
+				//if not playing audio or recording mp3 keep buffer at 7500
+#if IGNOREMUTEX == 1
+				pthread_mutex_lock(&input->datasocket->queuelock);
+#endif
+				if ((int) input->datasocket->rcv_que->size() > 7500) {
+
+					input->datasocket->rcv_que->pop();
+				}
+#if IGNOREMUTEX == 1
+				pthread_mutex_unlock(&input->datasocket->queuelock);
+#endif
 			}
 		}
+#endif
 
-//		//check is the queue is in a proper state
-//		if (((int) datasocket->rcv_que->size() > 8000) || ((int) datasocket->rcv_que->size() < -10)) {
-//			printf("\nERROR: Receive Queue Corrupted\n\n");
-//			printf("Receive Queue Length = %d\n", (int) datasocket->rcv_que->size());
-//			//disable receiver
-//			ui->Enable_receiver->setEnabled(false);
-//			exit(0);
-//		}
+
 	}
 
 	printf("output thread has exited\n");
-
-//	return NULL;
 	pthread_exit(NULL);
 
 }
@@ -619,7 +600,9 @@ bool MainWindow::Getmp3flag() {
 	return recordmp3;
 }
 void MainWindow::Setmp3flag(bool input) {
+
 	recordmp3 = input;
+
 }
 
 void MainWindow::recordmp3_initialize() {
@@ -645,23 +628,64 @@ void MainWindow::recordmp3_close() {
 
 void MainWindow::recordmp3_work() {
 	if ((int) datasocket->rcv_que->size() > 2) {
-
+#if IGNOREMUTEX == 1
 		pthread_mutex_lock(&datasocket->queuelock);
+#endif
+		mp3buffsize = lame_encode_buffer_ieee_float(lame, (float*) datasocket->rcv_que->front().rcvbuffer,
+				(float *) datasocket->rcv_que->front().rcvbuffer,
+				(int) (datasocket->rcv_que->front().revlength) / sizeof(float), mp3buffer, 10240);
 
-		mp3buffsize = lame_encode_buffer_ieee_float(lame, datasocket->rcv_que->front().rcvbuffer,
-				datasocket->rcv_que->front().rcvbuffer, datasocket->rcv_que->front().revlength / sizeof(float),
-				mp3buffer, 10240);
-
+//		printf("Writing %d bytes to mp3\n", int(datasocket->rcv_que->front().revlength / sizeof(float)));
+#if IGNOREMUTEX == 1
 		pthread_mutex_unlock(&datasocket->queuelock);
+#endif
 		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
 	}
 
-	//only pop off if the audio flag = false, otherwise the play audio function will pop
+//only pop off if the audio flag = false, otherwise the play audio function will pop
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&audiolock);
+#endif
 	if (Getaudioflag() == false) {
 		datasocket->rcv_que->pop();
 	}
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&audiolock);
+#endif
 
 }
+
+#if dspcode == 1
+
+void MainWindow::recordmp3_work_dsp() {
+	if ((int) datasocket->rcv_que->size() > 2) {
+#if IGNOREMUTEX == 1
+		pthread_mutex_lock(&demodquelock);
+#endif
+		mp3buffsize = lame_encode_buffer_ieee_float(lame, (float*) demodulated_que->front().buffer,
+				(float *) demodulated_que->front().buffer, (int) (demodulated_que->front().length) / sizeof(float),
+				mp3buffer, 10240);
+
+//		printf("Writing %d bytes to mp3\n", int(datasocket->rcv_que->front().revlength / sizeof(float)));
+#if IGNOREMUTEX == 1
+		pthread_mutex_unlock(&demodquelock);
+#endif
+		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
+	}
+
+//only pop off if the audio flag = false, otherwise the play audio function will pop
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&audiolock);
+#endif
+	if (Getaudioflag() == false) {
+		demodulated_que->pop();
+	}
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&audiolock);
+#endif
+
+}
+#endif
 
 void MainWindow::audio_init() {
 
@@ -687,39 +711,59 @@ void MainWindow::audio_init() {
 			);
 }
 
+
+#if dspcode == 1
+void MainWindow::audio_play_dsp() {
+	int error;
+
+//	if (datasocket->audiobufferset == true) {
+
+//		printf("audio length = %d\n", socket->rcv_que->front().revlength);
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&demodquelock);
+#endif
+	if ((int) datasocket->rcv_que->size() > 2) {
+		if (pa_simple_write(pulsestruct, demodulated_que->front().buffer, (size_t) demodulated_que->front().length,
+				&error) < 0) {
+			fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
+		}
+		//pop the data off, the mp3 recording only will pop if play audioflag = false
+		demodulated_que->pop();
+
+	} else {
+		//do nothing and let the buffer grow til its size is the min size
+
+	}
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&demodquelock);
+#endif
+}
+#endif
+
 void MainWindow::audio_play() {
 	int error;
 
-	if (datasocket->audiobufferset == true) {
+//	if (datasocket->audiobufferset == true) {
 
 //		printf("audio length = %d\n", socket->rcv_que->front().revlength);
-
-		pthread_mutex_lock(&datasocket->queuelock);
-
-		if ((int) datasocket->rcv_que->size() > 2) {
-			if (pa_simple_write(pulsestruct, datasocket->rcv_que->front().rcvbuffer,
-					(size_t) datasocket->rcv_que->front().revlength, &error) < 0) {
-				fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
-			}
-			//pop the data off, the mp3 recording only will pop if play audioflag = false
-			datasocket->rcv_que->pop();
-
-		} else {
-			//do nothing and let the buffer grow til its size is the min size
-
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&datasocket->queuelock);
+#endif
+	if ((int) datasocket->rcv_que->size() > 2) {
+		if (pa_simple_write(pulsestruct, datasocket->rcv_que->front().rcvbuffer,
+				(size_t) datasocket->rcv_que->front().revlength, &error) < 0) {
+			fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
 		}
-		pthread_mutex_unlock(&datasocket->queuelock);
+		//pop the data off, the mp3 recording only will pop if play audioflag = false
+		datasocket->rcv_que->pop();
 
 	} else {
-		//this is the initial buffer size
-		pthread_mutex_lock(&datasocket->queuelock);
-
-		if ((int) datasocket->rcv_que->size() > 500) {
-			datasocket->audiobufferset = true;
-		}
-		pthread_mutex_unlock(&datasocket->queuelock);
+		//do nothing and let the buffer grow til its size is the min size
 
 	}
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&datasocket->queuelock);
+#endif
 }
 
 void MainWindow::audio_close() {

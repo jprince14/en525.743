@@ -26,7 +26,7 @@ public:
 	int sockfd;
 	fd_set fdset;
 	struct timeval tv;
-	bool socketwasopenflag;
+//	bool socketwasopenflag;
 
 	void assignipaddr(std::string);
 	void assignport(int port);

@@ -13,6 +13,7 @@
 #include "encoder.h"
 #include "sdr.h"
 #include "structures.h"
+#include <pthread.h>
 
 void tcp_setaddress(struct tcp_socket* inputsocket, char* inputstring);
 void tcp_setport(struct tcp_socket* inputsocket, int port);

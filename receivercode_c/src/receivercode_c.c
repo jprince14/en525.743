@@ -24,9 +24,6 @@
 #include <liquid/liquid.h> // Liquid DSP Library http://liquidsdr.org/
 #include <lame/lame.h>
 
-#define Ampliture_Modulation 1;
-#define Frequency_Modulation 0;
-
 void* c2_socketcontrol(void* ptr) {
 	struct control* sdr_control = (struct control*) ptr;
 
@@ -36,9 +33,10 @@ void* c2_socketcontrol(void* ptr) {
 //		while (sdr_control->sdrstruct->receiverexitflag == false) {
 //		printf("receive loop\n");
 		tcp_listen(sdr_control->controlsocket, sdr_control->sdrstruct, sdr_control->demodstruct);
+		tcp_closesocket(sdr_control->controlsocket);
+
 //		}
 
-//		tcp_closesocket(sdr_control->controlsocket);
 	} else {
 		printf("ERROR: Unable to open command control socket\n");
 	}
@@ -167,14 +165,14 @@ void* menufunction(void* ptr) {
 
 int main(int argc, char**argv) {
 
-	if (argc != 4) {
-		printf("Error 3 arguments required\nProper Usage: ./server clientip commandcontrolport dataport\n");
+	if (argc != 5) {
+		printf("Error 4 arguments required\nProper Usage: ./server serverip controlport clientip dataport\n");
 		exit(0);
 	}
 
 #if WRITEFILES == 1
 	int x;
-	for (x = 1; x < 4; x++) {
+	for (x = 1; x < 5; x++) {
 		printf("arg %d = %s\n", x, argv[x]);
 	}
 #endif
@@ -221,8 +219,8 @@ int main(int argc, char**argv) {
 	tcp_setport(c2socket, atoi(argv[2]));
 	tcp_createsocket(c2socket);
 
-	udp_setaddress(transmitter_socket, argv[1]);
-	udp_setport(transmitter_socket, atoi(argv[3]));
+	udp_setaddress(transmitter_socket, argv[3]);
+	udp_setport(transmitter_socket, atoi(argv[4]));
 	udp_createsocket(transmitter_socket);
 
 	if (pthread_mutex_init(&rtlsdr->sdrlock, NULL) != 0) {

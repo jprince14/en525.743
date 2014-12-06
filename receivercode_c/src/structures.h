@@ -13,6 +13,10 @@
 #define MP3 1 //0  = write mp3, 1 = dont write (on the server)
 #endif
 
+#ifndef _DEBUG_FILTER
+#define DEBUG_FILTER 3 //0 = FM, 1 = AM , 3 - neither
+#endif
+
 #ifndef _SDR_WRITE
 #define SDR_WRITE 1 //0 = write, 1 = dont use
 #endif
@@ -41,7 +45,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <rtl-sdr.h>
-
 
 #define mono_FM 0
 #define stereo_FM 1
@@ -89,7 +92,6 @@
 #define CB_CHANNEL_40 	27405000 //Hz
 
 int cbradiofreqs[40];
-
 
 struct encoder {
 
@@ -162,26 +164,25 @@ struct audiostruct {
 	int minaudiobuffersize;
 	float audiobuffer[500];
 #if DEBUG == 1
-	pa_simple *pulsestruct;
-	pa_sample_spec pulsespec;
+pa_simple *pulsestruct;
+pa_sample_spec pulsespec;
 #endif
 };
 
 struct rtlsdrstruct {
 // the librtlsdr device object and the index used to look it up
-	rtlsdr_dev_t * device;
-	int device_index;
+rtlsdr_dev_t * device;
+int device_index;
 // called whenever samples are received from the RTL
 //rtl_execute_callback execute_callback;
 //void * execute_ctx;
 // buffer for samples received from the RTL
-	uint8_t buffer[75 * 1024];
-	int receivesize;
-	bool receiverexitflag;
-	bool sendaudio;
-	FILE * filewrite; //This file is only for testing purposes to write output to a file
-	pthread_mutex_t sdrlock;
-
+uint8_t buffer[75 * 1024];
+int receivesize;
+bool receiverexitflag;
+bool sendaudio;
+FILE * filewrite; //This file is only for testing purposes to write output to a file
+pthread_mutex_t sdrlock;
 
 };
 

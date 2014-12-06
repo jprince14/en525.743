@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>748</width>
-    <height>309</height>
+    <height>338</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -164,7 +164,7 @@
         <item row="1" column="1">
          <widget class="QLineEdit" name="beaglebone_ip">
           <property name="text">
-           <string>192.168.12.2</string>
+           <string>127.0.0.1</string>
           </property>
          </widget>
         </item>
@@ -178,7 +178,7 @@
         <item row="2" column="1">
          <widget class="QLineEdit" name="Client_IP">
           <property name="text">
-           <string>192.168.12.1</string>
+           <string>127.0.0.1</string>
           </property>
          </widget>
         </item>
@@ -212,6 +212,20 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>Enable_receiver</tabstop>
+  <tabstop>beaglebone_ip</tabstop>
+  <tabstop>Client_IP</tabstop>
+  <tabstop>beaglebone_port</tabstop>
+  <tabstop>beaglebone_data_port</tabstop>
+  <tabstop>Receive_data_type</tabstop>
+  <tabstop>modulation_combobox</tabstop>
+  <tabstop>fm_freq_BOX</tabstop>
+  <tabstop>CB_channel_box</tabstop>
+  <tabstop>enable_speakers</tabstop>
+  <tabstop>enable_recording</tabstop>
+  <tabstop>mp3_location</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
