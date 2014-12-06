@@ -40,6 +40,8 @@ public:
 	pa_buffer_attr pabuffer;
 	pa_sample_spec pulsespec;
 
+//	struct demodulateddata results;
+
 	static void* receivethread(void*);
 	static void* audiomp3thread(void*);
 
@@ -60,7 +62,6 @@ public:
 #if dspcode == 1
 	struct dspobjects* liquidobjects;
 #endif
-
 
 	unsigned char mp3buffer[10240];
 	lame_t lame;

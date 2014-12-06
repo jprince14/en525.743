@@ -7,14 +7,13 @@ MainWindow::MainWindow(QWidget *parent) :
 		QMainWindow(parent), ui(new Ui::MainWindow) {
 	recordmp3 = false;
 	playaudio = false;
-
 	ui->setupUi(this);
-
 	enableall(false, true);
 
 #if dspcode == 1
 	demodulated_que = new std::queue<demodulateddata>;
-	liquidobjects = malloc(sizeof(struct dspobjects));
+	liquidobjects = new dspobjects;
+//	results = new demodulateddata;
 
 #if IGNOREMUTEX == 1
 	if (pthread_mutex_init(&demodquelock, NULL) != 0) {
@@ -23,8 +22,6 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
 
 #endif
-
-
 
 	controlsocket = new std::tcpsocket;
 	datasocket = new std::udpsocket;
@@ -88,7 +85,6 @@ MainWindow::~MainWindow() {
 	pthread_mutex_destroy(&mp3lock);
 #endif
 
-
 #if dspcode == 1
 	//empty the receive queue
 	while (!demodulated_que->empty()) {
@@ -96,8 +92,9 @@ MainWindow::~MainWindow() {
 	}
 
 	demod_close(liquidobjects);
-	free(liquidobjects);
+	delete liquidobjects;
 	delete demodulated_que;
+//	delete results;
 #endif
 
 	delete datasocket;
@@ -361,6 +358,7 @@ void MainWindow::changesenddatatype() {
 		data[0] = 5;
 		data[1] = 0;
 		controlsocket->sendcommand(data);
+		sleep(1);
 
 	} else if (ui->Receive_data_type->currentIndex() == 1) {
 		//send raw IQ
@@ -369,6 +367,7 @@ void MainWindow::changesenddatatype() {
 		data[0] = 5;
 		data[1] = 1;
 		controlsocket->sendcommand(data);
+		sleep(1);
 	}
 }
 
@@ -537,7 +536,9 @@ void* MainWindow::audiomp3thread(void *ptr) {
 		else if (input->ui->Receive_data_type->currentIndex() == 1) {
 
 			pthread_mutex_lock(&input->datasocket->queuelock);
-			input->demodulated_que->push(demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
+
+			input->demodulated_que->push(
+					demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
 			input->datasocket->rcv_que->pop();
 			pthread_mutex_unlock(&input->datasocket->queuelock);
 
@@ -580,7 +581,6 @@ void* MainWindow::audiomp3thread(void *ptr) {
 			}
 		}
 #endif
-
 
 	}
 
@@ -710,7 +710,6 @@ void MainWindow::audio_init() {
 			NULL // Ignore error code.
 			);
 }
-
 
 #if dspcode == 1
 void MainWindow::audio_play_dsp() {
