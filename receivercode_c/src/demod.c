@@ -5,6 +5,8 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 	int _Q;
 	int x = 0;
 
+//	printf("inside dsp: receive size = %d\n", rtl->receivesize);
+
 	//the filter can only take in one sample at a time
 	for (x = 0; x < (rtl->receivesize / 2); x++) {
 

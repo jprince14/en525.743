@@ -54,6 +54,8 @@ public:
 #if IGNOREMUTEX == 1
 	pthread_mutex_t audiolock;
 	pthread_mutex_t mp3lock;
+	pthread_mutex_t receivetypelock;
+
 #if dspcode == 1
 	pthread_mutex_t demodquelock;
 #endif
@@ -61,11 +63,13 @@ public:
 
 #if dspcode == 1
 	struct dspobjects* liquidobjects;
+	bool rawiqflag;
+	bool demodqueflag;
 #endif
 
 	unsigned char mp3buffer[10240];
 	lame_t lame;
-	int mp3buffsize;
+	unsigned int mp3buffsize;
 	FILE* mp3file;
 
 	pthread_t receive_pthread;

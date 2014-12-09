@@ -3,13 +3,11 @@
 
 #include "dsp.h"
 
-demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct inputstruct) {
+struct demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct inputstruct) {
 
 	struct demodulateddata localresults;
 
-	printf("Input length = %d\n", inputstruct.revlength);
-
-
+//	printf("Input length = %d\n", inputstruct.revlength);
 
 	int _I;
 	int _Q;
@@ -35,12 +33,16 @@ demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct inputstr
 			liquid_float_complex y;
 			iirfilt_crcf_execute(dsp->fm_filter, x_complex, &y);
 
+//			printf("after filter\n");
+
 #if (WRITEFILES == 1) &&  (DEBUG_FILTER == 0)
 			fwrite(&y, sizeof(float complex), 1, dsp->filtered);
 #endif
 
 			// run frequency demodulation
 			freqdem_demodulate_block(dsp->fdem, &y, 1, dsp->buf_demod);
+
+//			printf("after demod\n");
 
 //		fwrite(&dsp->buf_demod, sizeof(float), 1, dsp->fid_demod);
 
@@ -49,7 +51,7 @@ demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct inputstr
 //this line below gives a warning but it works fine
 			msresamp_rrrf_execute(dsp->resampler, dsp->buf_demod, 1, localresults.buffer + localresults.length,
 					&dsp->nw_resamp);
-
+//			printf("after resampler\n");
 //		printf("dsp->nw_resamp = %d\n", dsp->nw_resamp);
 
 //			fwrite(dsp->buf_resamp + dsp->buffercounter, sizeof(float), dsp->nw_resamp, dsp->fid_demod);
@@ -75,9 +77,7 @@ demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct inputstr
 					&dsp->nw_resamp);
 
 			localresults.length += (dsp->nw_resamp);
-
 		}
-
 	}
 
 #if WRITEFILES == 1

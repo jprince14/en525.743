@@ -1,6 +1,9 @@
 #ifndef DSP_H
 #define DSP_H
 
+// First run g++ -c -o dsp.cc.o dsp.cc
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
