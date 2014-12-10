@@ -44,6 +44,7 @@ public:
 
 	static void* receivethread(void*);
 	static void* audiomp3thread(void*);
+	static void* demodthread(void*);
 
 //	bool socketconnectflag;
 	bool Getaudioflag();
@@ -64,7 +65,7 @@ public:
 #if dspcode == 1
 	struct dspobjects* liquidobjects;
 	bool rawiqflag;
-	bool demodqueflag;
+	bool demodbufferflagset;
 #endif
 
 	unsigned char mp3buffer[10240];
@@ -74,6 +75,7 @@ public:
 
 	pthread_t receive_pthread;
 	pthread_t output_pthread;
+	pthread_t demod_thread;
 
 #if dspcode == 1
 	std::queue<demodulateddata> *demodulated_que;

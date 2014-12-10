@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	recordmp3 = false;
 	playaudio = false;
 	rawiqflag = false;
-	demodqueflag = false;
+	demodbufferflagset = false;
 	ui->setupUi(this);
 	enableall(false, true);
 
@@ -83,6 +83,7 @@ MainWindow::~MainWindow() {
 #if JOINFLAG == 1
 			pthread_join(receive_pthread, NULL);
 			pthread_join(output_pthread, NULL);
+			pthread_join(demod_thread, NULL);
 #endif
 		}
 	}
@@ -113,8 +114,9 @@ MainWindow::~MainWindow() {
 //	delete results;
 #endif
 
+#if IGNOREMUTEX == 1
 	pthread_mutex_destroy(&receivetypelock);
-
+#endif
 	delete datasocket;
 	delete controlsocket;
 	delete ui;
@@ -220,6 +222,7 @@ void MainWindow::enableall(bool flag, bool startup) {
 #if JOINFLAG == 1
 			pthread_join(receive_pthread, NULL);
 			pthread_join(output_pthread, NULL);
+			pthread_join(demod_thread, NULL);
 #endif
 //			printf("location 4\n");
 //			}
@@ -263,6 +266,10 @@ void MainWindow::initialize_open_udp_socket(std::udpsocket* _socket) {
 	if (pthread_create(&output_pthread, NULL, audiomp3thread, this) != 0) {
 
 		printf("Error creating audio and mp3 thread\n");
+	}
+	if (pthread_create(&demod_thread, NULL, demodthread, this) != 0) {
+
+		printf("Error creating demod thread\n");
 	}
 
 }
@@ -369,9 +376,6 @@ void MainWindow::changemodulation() {
 
 void MainWindow::changesenddatatype() {
 
-	printf("\n\n\n\n\n need to update code here\n\n\n\n");
-#warning - COME BACK HERE
-
 	//empty the queue
 #if IGNOREMUTEX == 1
 	pthread_mutex_lock(&datasocket->queuelock);
@@ -385,6 +389,7 @@ void MainWindow::changesenddatatype() {
 	while (!datasocket->rcv_que->empty()) {
 		datasocket->rcv_que->pop();
 	}
+
 	printf("queue size = %d\n", datasocket->rcv_que->size());
 
 #if IGNOREMUTEX == 1
@@ -395,6 +400,17 @@ void MainWindow::changesenddatatype() {
 	pthread_mutex_unlock(&datasocket->queuelock);
 #endif
 
+#if IGNOREMUTEX == 1
+	pthread_mutex_lock(&demodquelock);
+#endif
+
+	while (!demodulated_que->empty()) {
+		demodulated_que->pop();
+	}
+
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&demodquelock);
+#endif
 	//pause the audio/mp3 thread
 	//flush the udp receive buffer
 	//resume the thread
@@ -417,6 +433,7 @@ void MainWindow::changesenddatatype() {
 		data[1] = 1;
 		controlsocket->sendcommand(data);
 		rawiqflag = true;
+		demodbufferflagset = false;
 		usleep(10000);
 	}
 }
@@ -520,7 +537,6 @@ void* MainWindow::receivethread(void *ptr) {
 
 	while (input->datasocket->Getrunningflag() == true) {
 		input->datasocket->receive();
-
 	}
 
 	printf("receive thread has exited\n");
@@ -583,26 +599,12 @@ void* MainWindow::audiomp3thread(void *ptr) {
 #endif
 			}
 
-			//Process raw IQ data
 		}
+
+		//Process raw IQ data
 
 #if dspcode == 1
 		else if (input->rawiqflag == true) {
-
-			pthread_mutex_lock(&input->datasocket->queuelock);
-			if ((int) input->datasocket->rcv_que->size() > 1) {
-//				struct demodulateddata localresult = demod_work(input->liquidobjects,
-//						input->datasocket->rcv_que->front());
-
-//				printf("Localresult length = %d\n", localresult.length);
-//				input->demodulated_que->push(localresult);
-				input->demodulated_que->push(demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
-//				printf("Localresult length = %d\n", input->demodulated_que->front().length);
-
-//				input->demodulated_que->front().length;
-				input->datasocket->rcv_que->pop();
-			}
-			pthread_mutex_unlock(&input->datasocket->queuelock);
 
 #if IGNOREMUTEX == 1
 			pthread_mutex_lock(&input->mp3lock);
@@ -620,7 +622,6 @@ void* MainWindow::audiomp3thread(void *ptr) {
 			if (input->Getaudioflag() == true) {
 				//send sound to speakers
 				input->audio_play_dsp();
-
 			}
 #if IGNOREMUTEX == 1
 			pthread_mutex_unlock(&input->audiolock);
@@ -631,15 +632,17 @@ void* MainWindow::audiomp3thread(void *ptr) {
 			if ((input->Getmp3flag() == false) && (input->Getaudioflag() == false)) {
 				//if not playing audio or recording mp3 keep buffer at 7500
 #if IGNOREMUTEX == 1
-				pthread_mutex_lock(&input->datasocket->queuelock);
+				pthread_mutex_lock(&input->demodquelock);
 #endif
-				if ((int) input->datasocket->rcv_que->size() > 7500) {
 
-					input->datasocket->rcv_que->pop();
+				if ((int) input->demodulated_que->size() > 7500) {
+					input->demodulated_que->pop();
+					printf("demod queue popped bc no audio or mp3\n");
 				}
 #if IGNOREMUTEX == 1
-				pthread_mutex_unlock(&input->datasocket->queuelock);
+				pthread_mutex_unlock(&input->demodquelock);
 #endif
+
 			}
 		}
 
@@ -652,6 +655,66 @@ void* MainWindow::audiomp3thread(void *ptr) {
 	}
 
 	printf("output thread has exited\n");
+	pthread_exit(NULL);
+
+}
+
+void* MainWindow::demodthread(void* ptr) {
+	MainWindow* input = (MainWindow*) ptr;
+
+//	input->demodbufferflagset = false;
+
+	while (input->datasocket->Getrunningflag() == true) {
+
+		if (input->rawiqflag == true) {
+//			pthread_mutex_lock(&input->datasocket->queuelock);
+			if ((int) input->datasocket->rcv_que->size() > 1) {
+//				struct demodulateddata localresult = demod_work(input->liquidobjects,
+//						input->datasocket->rcv_que->front());
+
+//				printf("Localresult length = %d\n", localresult.length);
+//				input->demodulated_que->push(localresult);
+
+#if IGNOREMUTEX == 1
+				pthread_mutex_lock(&input->demodquelock);
+#endif
+
+				input->demodulated_que->push(demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
+
+#if IGNOREMUTEX == 1
+				pthread_mutex_unlock(&input->demodquelock);
+#endif
+
+				input->datasocket->rcv_que->pop();
+
+				//build up a buffer of length 500 before using the demod data
+				if (input->demodbufferflagset == false) {
+//					pthread_mutex_lock(&input->demodquelock);
+
+					if ((int) input->demodulated_que->size() > 500) {
+						input->demodbufferflagset = true;
+						printf("Demod buffer set\n");
+					}
+//				pthread_mutex_unlock(&input->demodquelock);
+
+//			pthread_mutex_unlock(&input->datasocket->queuelock);
+				}
+
+				else {
+					//min buffer size has already been reached
+				}
+			} else {
+				//not enogh data in the queue
+				usleep(10000);
+			}
+
+		} else {
+			//receiving PCM audio at the moment
+			usleep(10000);
+		}
+
+	}
+
 	pthread_exit(NULL);
 
 }
@@ -753,6 +816,7 @@ void MainWindow::recordmp3_work_dsp() {
 #endif
 	if (Getaudioflag() == false) {
 		demodulated_que->pop();
+		printf("demod que popped in mp3 thread\n");
 	}
 #if IGNOREMUTEX == 1
 	pthread_mutex_unlock(&datasocket->queuelock);
@@ -790,28 +854,30 @@ void MainWindow::audio_init() {
 void MainWindow::audio_play_dsp() {
 	int error;
 
-//	if (datasocket->audiobufferset == true) {
+	if (demodbufferflagset == true) {
 
-//		printf("audio length = %d\n", socket->rcv_que->front().revlength);
+//		printf("dsp queue = %d\n", (int) demodulated_que->size());
+//		printf("audio length = %d\n", demodulated_que->front().length);
+
 #if IGNOREMUTEX == 1
-	pthread_mutex_lock(&demodquelock);
+		pthread_mutex_lock(&demodquelock);
 #endif
-	if ((demodqueflag == false) && (demodulated_que->size() > 200)) {
-		demodqueflag = true;
-	} else if (((int) demodulated_que->size() > 2) && (demodqueflag == true)) {
-		if (pa_simple_write(pulsestruct, demodulated_que->front().buffer, (size_t) demodulated_que->front().length,
-				&error) < 0) {
-			fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
+		if ((int) demodulated_que->size() > 1) {
+			if (pa_simple_write(pulsestruct, (void*) demodulated_que->front().buffer,
+					(size_t) demodulated_que->front().length, &error) < 0) {
+				fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
+			}
+			//pop the data off, the mp3 recording only will pop if play audioflag = false
+			demodulated_que->pop();
+			printf("demod que popped in audio thread\n");
+		} else {
+			//do nothing and let the buffer grow til its size is the min size
 		}
-		//pop the data off, the mp3 recording only will pop if play audioflag = false
-		demodulated_que->pop();
-	} else {
-		//do nothing and let the buffer grow til its size is the min size
 
-	}
 #if IGNOREMUTEX == 1
-	pthread_mutex_unlock(&demodquelock);
+		pthread_mutex_unlock(&demodquelock);
 #endif
+	}
 }
 #endif
 
