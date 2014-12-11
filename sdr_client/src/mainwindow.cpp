@@ -381,6 +381,9 @@ void MainWindow::changesenddatatype() {
 
 	//empty the queue
 #if IGNOREMUTEX == 1
+	pthread_mutex_lock(&audiolock);
+	pthread_mutex_lock(&mp3lock);
+
 	pthread_mutex_lock(&datasocket->queuelock);
 #endif
 
@@ -393,7 +396,7 @@ void MainWindow::changesenddatatype() {
 		datasocket->rcv_que->pop();
 	}
 
-	printf("queue size = %d\n", datasocket->rcv_que->size());
+//	printf("queue size = %d\n", datasocket->rcv_que->size());
 
 #if IGNOREMUTEX == 1
 //	pthread_mutex_unlock(&receivetypelock);
@@ -413,6 +416,8 @@ void MainWindow::changesenddatatype() {
 
 #if IGNOREMUTEX == 1
 	pthread_mutex_unlock(&demodquelock);
+	pthread_mutex_unlock(&mp3lock);
+	pthread_mutex_unlock(&audiolock);
 #endif
 	//pause the audio/mp3 thread
 	//flush the udp receive buffer
@@ -615,6 +620,7 @@ void* MainWindow::audiomp3thread(void *ptr) {
 			pthread_mutex_lock(&input->mp3lock);
 #endif
 			if (input->Getmp3flag() == true) {
+//				printf("mp3 flag = true\n");
 				input->recordmp3_work_dsp();
 			}
 #if IGNOREMUTEX == 1
@@ -748,7 +754,6 @@ bool MainWindow::Getmp3flag() {
 void MainWindow::Setmp3flag(bool input) {
 
 	recordmp3 = input;
-
 }
 
 void MainWindow::recordmp3_initialize() {
@@ -785,27 +790,30 @@ void MainWindow::recordmp3_work() {
 #if IGNOREMUTEX == 1
 		pthread_mutex_unlock(&datasocket->queuelock);
 #endif
-		if (mp3buffsize > 0) {
-			printf("writing to mp3 buffer size = %d\n", mp3buffsize);
-			if (mp3buffsize != fwrite(mp3buffer, 1, mp3buffsize, mp3file)) {
-				printf("Error writing mp3 file");
-				exit(0);
-			}
-		}
-	}
+		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
+
+//		if (mp3buffsize > 0) {
+//			printf("writing to mp3 buffer size = %d\n", mp3buffsize);
+//			if (mp3buffsize != fwrite(mp3buffer, 1, mp3buffsize, mp3file)) {
+//				printf("Error writing mp3 file");
+//				exit(0);
+//			}
+//		}
 
 //only pop off if the audio flag = false, otherwise the play audio function will pop
 #if IGNOREMUTEX == 1
-	pthread_mutex_lock(&audiolock);
+		pthread_mutex_lock(&audiolock);
 #endif
-	if (Getaudioflag() == false) {
+		if (Getaudioflag() == false) {
 //pop if the audio is not playing, if audio playing pop will occur there
-		datasocket->rcv_que->pop();
-	}
+//			printf("pre-pop\n");
+			datasocket->rcv_que->pop();
+//			printf("postpop\n");
+		}
 #if IGNOREMUTEX == 1
-	pthread_mutex_unlock(&audiolock);
+		pthread_mutex_unlock(&audiolock);
 #endif
-
+	}
 }
 
 #if dspcode == 1
@@ -829,23 +837,22 @@ void MainWindow::recordmp3_work_dsp() {
 //		fwrite(demodulated_que->front().buffer, 1, demodulated_que->front().length,
 //				demodulated);
 //		printf("demodulated_que->front().length = %d\n", demodulated_que->front().length);
-//		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
-	}
+		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
 
 //only pop off if the audio flag = false, otherwise the play audio function will pop
 #if IGNOREMUTEX == 1
-	pthread_mutex_lock(&audiolock);
-//	pthread_mutex_lock(&datasocket->queuelock);
+//	pthread_mutex_lock(&audiolock);
+		pthread_mutex_lock(&demodquelock);
 #endif
-	if (Getaudioflag() == false) {
+		if (Getaudioflag() == false) {
 //pop if the audio is not playing, if audio playing pop will occur there
-		demodulated_que->pop();
-	}
+			demodulated_que->pop();
+		}
 #if IGNOREMUTEX == 1
-//	pthread_mutex_unlock(&datasocket->queuelock);
-	pthread_mutex_unlock(&audiolock);
+		pthread_mutex_unlock(&demodquelock);
+//	pthread_mutex_unlock(&audiolock);
 #endif
-
+	}
 }
 #endif
 
