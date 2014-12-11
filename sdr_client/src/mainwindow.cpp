@@ -444,6 +444,7 @@ void MainWindow::changesenddatatype() {
 //		demodbufferflagset = false;
 		usleep(10000);
 	}
+
 }
 
 void MainWindow::on_Receive_data_type_currentIndexChanged(int) {
@@ -570,17 +571,17 @@ void* MainWindow::audiomp3thread(void *ptr) {
 		if (input->rawiqflag == false) {
 
 #if IGNOREMUTEX == 1
-			pthread_mutex_lock(&input->mp3lock);
+//			pthread_mutex_lock(&input->mp3lock);
 #endif
 			if (input->Getmp3flag() == true) {
 				input->recordmp3_work();
 			}
 #if IGNOREMUTEX == 1
-			pthread_mutex_unlock(&input->mp3lock);
+//			pthread_mutex_unlock(&input->mp3lock);
 #endif
 			//the mp3 must come before the audio since the pop from the queue is in the audio code
 #if IGNOREMUTEX == 1
-			pthread_mutex_lock(&input->audiolock);
+//			pthread_mutex_lock(&input->audiolock);
 #endif
 			if (input->Getaudioflag() == true) {
 				//send sound to speakers
@@ -588,7 +589,7 @@ void* MainWindow::audiomp3thread(void *ptr) {
 
 			}
 #if IGNOREMUTEX == 1
-			pthread_mutex_unlock(&input->audiolock);
+//			pthread_mutex_unlock(&input->audiolock);
 #endif
 //		pthread_mutex_lock(&input->audiolock);
 //		pthread_mutex_lock(&input->mp3lock);
@@ -617,25 +618,25 @@ void* MainWindow::audiomp3thread(void *ptr) {
 //			if (input->demodbufferflagset == true) {
 
 #if IGNOREMUTEX == 1
-			pthread_mutex_lock(&input->mp3lock);
+//			pthread_mutex_lock(&input->mp3lock);
 #endif
 			if (input->Getmp3flag() == true) {
 //				printf("mp3 flag = true\n");
 				input->recordmp3_work_dsp();
 			}
 #if IGNOREMUTEX == 1
-			pthread_mutex_unlock(&input->mp3lock);
+//			pthread_mutex_unlock(&input->mp3lock);
 #endif
 			//the mp3 must come before the audio since the pop from the queue is in the audio code
 #if IGNOREMUTEX == 1
-			pthread_mutex_lock(&input->audiolock);
+//			pthread_mutex_lock(&input->audiolock);
 #endif
 			if (input->Getaudioflag() == true) {
 				//send sound to speakers
 				input->audio_play_dsp();
 			}
 #if IGNOREMUTEX == 1
-			pthread_mutex_unlock(&input->audiolock);
+//			pthread_mutex_unlock(&input->audiolock);
 #endif
 //		pthread_mutex_lock(&input->audiolock);
 //		pthread_mutex_lock(&input->mp3lock);
@@ -778,18 +779,18 @@ void MainWindow::recordmp3_close() {
 }
 
 void MainWindow::recordmp3_work() {
-	if ((int) datasocket->rcv_que->size() > 2) {
 #if IGNOREMUTEX == 1
-		pthread_mutex_lock(&datasocket->queuelock);
+	pthread_mutex_lock(&mp3lock);
+	pthread_mutex_lock(&datasocket->queuelock);
 #endif
+	if ((int) datasocket->rcv_que->size() > 2) {
+
 		mp3buffsize = lame_encode_buffer_ieee_float(lame, (float*) datasocket->rcv_que->front().rcvbuffer,
 				(float *) datasocket->rcv_que->front().rcvbuffer,
 				(int) (datasocket->rcv_que->front().revlength) / sizeof(float), mp3buffer, 10240);
 
 //		printf("Writing %d bytes to mp3\n", int(datasocket->rcv_que->front().revlength / sizeof(float)));
-#if IGNOREMUTEX == 1
-		pthread_mutex_unlock(&datasocket->queuelock);
-#endif
+
 		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
 
 //		if (mp3buffsize > 0) {
@@ -814,6 +815,12 @@ void MainWindow::recordmp3_work() {
 		pthread_mutex_unlock(&audiolock);
 #endif
 	}
+
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&datasocket->queuelock);
+	pthread_mutex_unlock(&mp3lock);
+
+#endif
 }
 
 #if dspcode == 1
@@ -821,16 +828,19 @@ void MainWindow::recordmp3_work() {
 void MainWindow::recordmp3_work_dsp() {
 //	printf("demodulated_que->front()->size() = %d\n", demodulated_que->size());
 
-	if ((int) datasocket->rcv_que->size() > 2) {
 #if IGNOREMUTEX == 1
-		pthread_mutex_lock(&demodquelock);
+	pthread_mutex_lock(&mp3lock);
+	pthread_mutex_lock(&demodquelock);
 #endif
+
+	if ((int) datasocket->rcv_que->size() > 2) {
+
 		mp3buffsize = lame_encode_buffer_ieee_float(lame, (float*) demodulated_que->front().buffer,
 				(float *) demodulated_que->front().buffer, (int) (demodulated_que->front().length), mp3buffer, 10240);
 
 //		printf("Writing %d bytes to mp3\n", int(datasocket->rcv_que->front().revlength / sizeof(float)));
 #if IGNOREMUTEX == 1
-		pthread_mutex_unlock(&demodquelock);
+//		pthread_mutex_unlock(&demodquelock);
 #endif
 
 //		printf("demodulated_que->front()->size() = %d\n", demodulated_que->size());
@@ -841,18 +851,21 @@ void MainWindow::recordmp3_work_dsp() {
 
 //only pop off if the audio flag = false, otherwise the play audio function will pop
 #if IGNOREMUTEX == 1
-//	pthread_mutex_lock(&audiolock);
-		pthread_mutex_lock(&demodquelock);
+		pthread_mutex_lock(&audiolock);
+//		pthread_mutex_lock(&demodquelock);
 #endif
 		if (Getaudioflag() == false) {
 //pop if the audio is not playing, if audio playing pop will occur there
 			demodulated_que->pop();
 		}
-#if IGNOREMUTEX == 1
-		pthread_mutex_unlock(&demodquelock);
-//	pthread_mutex_unlock(&audiolock);
-#endif
+		pthread_mutex_unlock(&audiolock);
+
 	}
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&demodquelock);
+	pthread_mutex_unlock(&mp3lock);
+
+#endif
 }
 #endif
 
@@ -890,6 +903,7 @@ void MainWindow::audio_play_dsp() {
 //		printf("audio length = %d\n", demodulated_que->front().length);
 
 #if IGNOREMUTEX == 1
+	pthread_mutex_lock(&audiolock);
 	pthread_mutex_lock(&demodquelock);
 #endif
 	if ((int) demodulated_que->size() > 2) {
@@ -913,6 +927,8 @@ void MainWindow::audio_play_dsp() {
 
 #if IGNOREMUTEX == 1
 	pthread_mutex_unlock(&demodquelock);
+	pthread_mutex_unlock(&audiolock);
+
 #endif
 //	}
 }
@@ -925,6 +941,7 @@ void MainWindow::audio_play() {
 
 //		printf("audio length = %d\n", socket->rcv_que->front().revlength);
 #if IGNOREMUTEX == 1
+	pthread_mutex_lock(&audiolock);
 	pthread_mutex_lock(&datasocket->queuelock);
 #endif
 	if ((int) datasocket->rcv_que->size() > 2) {
@@ -941,6 +958,7 @@ void MainWindow::audio_play() {
 	}
 #if IGNOREMUTEX == 1
 	pthread_mutex_unlock(&datasocket->queuelock);
+	pthread_mutex_unlock(&audiolock);
 #endif
 }
 
