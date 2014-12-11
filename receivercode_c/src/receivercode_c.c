@@ -67,30 +67,31 @@ void* menufunction(void* ptr) {
 			tune_sdr(sdr_control->sdrstruct, freq, sdr_control->demodstruct);
 		}
 
-		// adjust sampling rate
-		if (x == 2) {
+		// adjust between sending audio and raw IQ data
+		else if (x == 2) {
 
 			printf("Enter 1 to send IQ Data and 2 to sent Audio\n");
 			int dataoption;
 
 			scanf("%d", &dataoption);
+//			printf("dataoption = %d\n", dataoption);
 
 			if (dataoption == 1) {
 				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
 				//send the raw IQ data
+				printf("Now sending raw IQ data\n");
 				sdr_control->sdrstruct->sendaudio = false;
-				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
+				pthread_mutex_unlock(&sdr_control->sdrstruct->sdrlock);
 
 			} else if (dataoption == 2) {
-
 				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
-				//send the raw IQ data
+				//PCM audio
+				printf("Now sending audio\n");
 				sdr_control->sdrstruct->sendaudio = true;
-				pthread_mutex_lock(&sdr_control->sdrstruct->sdrlock);
-
+				pthread_mutex_unlock(&sdr_control->sdrstruct->sdrlock);
 			}
-		}
-		if (x == 3) {
+
+		} else if (x == 3) {
 			int fmoption;
 			printf("Demodulation options:\n1:FM-Mono(default)\n3:AM-(CB Radio)\n");
 			scanf("%d", &fmoption);
@@ -106,17 +107,7 @@ void* menufunction(void* ptr) {
 					sdr_control->demodstruct->demodtype = mono_FM;
 					sdr_control->demodstruct->buffercounter = 0;
 				}
-//			} else if (fmoption == 2) {
-//				if (sdr_control->demodstruct->demodtype == stereo_FM) {
-//					printf("Demod type is already set to FM-stereo\n");
-//				} else {
-//					printf("Enter the desired tuning frequency (in Hz)\n");
-//					uint32_t freq;
-//					scanf("%d", &freq);
-//					tune_sdr(sdr_control->sdrstruct, freq, sdr_control->demodstruct);
-//					sdr_control->demodstruct->demodtype = stereo_FM;
-//					sdr_control->demodstruct->buffercounter = 0;
-//				}
+
 			} else if (fmoption == 3) {
 				if (sdr_control->demodstruct->demodtype == cb_AM) {
 					printf("Demod type is already set to AM (CB)\n");
@@ -130,10 +121,9 @@ void* menufunction(void* ptr) {
 					sdr_control->demodstruct->buffercounter = 0;
 				}
 			}
-		}
 
-		//CB Channel Menu
-		if (x == 4) {
+			//CB Channel Menu
+		} else if (x == 4) {
 			int cbchannel;
 			printf("Select CB Radio Channel - select 1 - 40\n");
 			scanf("%d", &cbchannel);
@@ -141,7 +131,7 @@ void* menufunction(void* ptr) {
 		}
 
 		//Exit
-		if (x == 9) {
+		else if (x == 9) {
 
 			printf("Exit signal received\n");
 			sdr_control->sdrstruct->receiverexitflag = true;

@@ -65,13 +65,14 @@ public:
 #if dspcode == 1
 	struct dspobjects* liquidobjects;
 	bool rawiqflag;
-	bool demodbufferflagset;
+//	bool demodbufferflagset;
 #endif
 
 	unsigned char mp3buffer[10240];
 	lame_t lame;
 	unsigned int mp3buffsize;
 	FILE* mp3file;
+	FILE* demodulated;
 
 	pthread_t receive_pthread;
 	pthread_t output_pthread;

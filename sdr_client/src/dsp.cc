@@ -11,7 +11,7 @@ struct demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct i
 
 	int _I;
 	int _Q;
-	int x = 0;
+	unsigned int x = 0;
 	localresults.length = 0;
 
 	//the filter can only take in one sample at a time
@@ -79,6 +79,9 @@ struct demodulateddata demod_work(struct dspobjects* dsp, struct receivestruct i
 			localresults.length += (dsp->nw_resamp);
 		}
 	}
+
+
+//	printf("length = %d\n", localresults.length);
 
 #if WRITEFILES == 1
 //	fwrite(dsp->buf_resamp, 1, sizeof(float) * dsp->buffercounter, dsp->fid_demod);

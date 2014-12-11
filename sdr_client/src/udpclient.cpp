@@ -4,7 +4,6 @@ namespace std {
 
 udpsocket::udpsocket() :
 		runningflag(false) {
-	// TODO Auto-generated constructor stub
 	sockfd = 0;
 	bzero(&servaddr, sizeof(servaddr));
 	rcv_que = new std::queue<receivestruct>;
@@ -43,7 +42,7 @@ void udpsocket::createsocket() {
 void udpsocket::closesocket() {
 
 	runningflag = false;
-		close(sockfd);
+	close(sockfd);
 }
 
 bool udpsocket::opensocket() {
@@ -66,6 +65,8 @@ void udpsocket::receive() {
 
 	rcv_struct.revlength = recvfrom(sockfd, (char*) &rcv_struct.rcvbuffer, 2500 * sizeof(float), 0,
 			(struct sockaddr *) &servaddr, &fromlen);
+
+//	printf("rcv_struct.revlength = %d\n", rcv_struct.revlength);
 
 	if (rcv_struct.revlength > 0) {
 #if IGNOREMUTEX == 1

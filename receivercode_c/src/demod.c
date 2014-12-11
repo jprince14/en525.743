@@ -7,7 +7,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 
 //	printf("inside dsp: receive size = %d\n", rtl->receivesize);
 
-	//the filter can only take in one sample at a time
+//the filter can only take in one sample at a time
 	for (x = 0; x < (rtl->receivesize / 2); x++) {
 
 		_I = rtl->buffer[2 * x];
@@ -56,7 +56,6 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			fwrite(&y_AM, sizeof(float complex), 1, dsp->filtered);
 #endif
 
-
 			ampmodem_demodulate(dsp->ampdemod, y_AM, dsp->buf_demod);
 
 			dsp->nw_resamp = 0;
@@ -64,9 +63,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 			msresamp_rrrf_execute(dsp->resampler, dsp->buf_demod, 1, dsp->buf_resamp + dsp->buffercounter,
 					&dsp->nw_resamp);
 			dsp->buffercounter += (dsp->nw_resamp);
-
 		}
-
 	}
 
 #if WRITEFILES == 1
@@ -75,6 +72,7 @@ void demod_work(struct rtlsdrstruct* rtl, struct liquidobjects* dsp) {
 
 	dsp->copy_buffcounter = dsp->buffercounter;
 	dsp->buffercounter = 0;
+//	printf("length = %d\n", dsp->copy_buffcounter);
 }
 
 void initialize_dspobjects(struct liquidobjects* dsp) {

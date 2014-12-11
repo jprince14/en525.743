@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	recordmp3 = false;
 	playaudio = false;
 	rawiqflag = false;
-	demodbufferflagset = false;
+//	demodbufferflagset = false;
 	ui->setupUi(this);
 	enableall(false, true);
 
@@ -54,6 +54,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 
 #endif
+
+	demodulated = fopen("demod.bin", "wb");
+
 }
 
 MainWindow::~MainWindow() {
@@ -433,7 +436,7 @@ void MainWindow::changesenddatatype() {
 		data[1] = 1;
 		controlsocket->sendcommand(data);
 		rawiqflag = true;
-		demodbufferflagset = false;
+//		demodbufferflagset = false;
 		usleep(10000);
 	}
 }
@@ -606,6 +609,8 @@ void* MainWindow::audiomp3thread(void *ptr) {
 #if dspcode == 1
 		else if (input->rawiqflag == true) {
 
+//			if (input->demodbufferflagset == true) {
+
 #if IGNOREMUTEX == 1
 			pthread_mutex_lock(&input->mp3lock);
 #endif
@@ -637,13 +642,13 @@ void* MainWindow::audiomp3thread(void *ptr) {
 
 				if ((int) input->demodulated_que->size() > 7500) {
 					input->demodulated_que->pop();
-					printf("demod queue popped bc no audio or mp3\n");
+//					printf("demod queue popped bc no audio or mp3\n");
 				}
 #if IGNOREMUTEX == 1
 				pthread_mutex_unlock(&input->demodquelock);
 #endif
-
 			}
+//			}
 		}
 
 #if IGNOREMUTEX == 1
@@ -667,6 +672,7 @@ void* MainWindow::demodthread(void* ptr) {
 	while (input->datasocket->Getrunningflag() == true) {
 
 		if (input->rawiqflag == true) {
+
 //			pthread_mutex_lock(&input->datasocket->queuelock);
 			if ((int) input->datasocket->rcv_que->size() > 1) {
 //				struct demodulateddata localresult = demod_work(input->liquidobjects,
@@ -678,38 +684,48 @@ void* MainWindow::demodthread(void* ptr) {
 #if IGNOREMUTEX == 1
 				pthread_mutex_lock(&input->demodquelock);
 #endif
-
+//					printf("rcv que size = %d, demod queue size = %d\n", (int) input->datasocket->rcv_que->size(),
+//							(int) input->demodulated_que->size());
 				input->demodulated_que->push(demod_work(input->liquidobjects, input->datasocket->rcv_que->front()));
+//				printf("rcv que size = %d, demod queue size = %d, demod length = %d, rcv_que length = %d\n", (int) input->datasocket->rcv_que->size(),
+//						(int) input->demodulated_que->size(), input->demodulated_que->front().length, input->datasocket->rcv_que->front().revlength);
 
+//					printf("location 1\n");
 #if IGNOREMUTEX == 1
 				pthread_mutex_unlock(&input->demodquelock);
 #endif
 
+				pthread_mutex_lock(&input->datasocket->queuelock);
+
 				input->datasocket->rcv_que->pop();
+//					printf("location 2\n");
+				pthread_mutex_unlock(&input->datasocket->queuelock);
 
 				//build up a buffer of length 500 before using the demod data
-				if (input->demodbufferflagset == false) {
-//					pthread_mutex_lock(&input->demodquelock);
 
-					if ((int) input->demodulated_que->size() > 500) {
-						input->demodbufferflagset = true;
-						printf("Demod buffer set\n");
-					}
+//				printf("location 3\n");
+//				if (input->demodbufferflagset == false) {
+////					pthread_mutex_lock(&input->demodquelock);
+//
+//					if ((int) input->demodulated_que->size() > 7500) {
+//						input->demodbufferflagset = true;
+//						printf("Demod buffer set\n");
+//					}
+//					printf("location 4\n");
 //				pthread_mutex_unlock(&input->demodquelock);
 
 //			pthread_mutex_unlock(&input->datasocket->queuelock);
-				}
-
-				else {
-					//min buffer size has already been reached
-				}
+//			}
+//			else {
+//				//min buffer size has already been reached
+//			}
 			} else {
 				//not enogh data in the queue
-				usleep(10000);
+//				usleep(10000);
 			}
 
 		} else {
-			//receiving PCM audio at the moment
+			//receiving PCM audio at the moment, demod thread does nothing
 			usleep(10000);
 		}
 
@@ -783,6 +799,7 @@ void MainWindow::recordmp3_work() {
 	pthread_mutex_lock(&audiolock);
 #endif
 	if (Getaudioflag() == false) {
+//pop if the audio is not playing, if audio playing pop will occur there
 		datasocket->rcv_que->pop();
 	}
 #if IGNOREMUTEX == 1
@@ -794,32 +811,38 @@ void MainWindow::recordmp3_work() {
 #if dspcode == 1
 
 void MainWindow::recordmp3_work_dsp() {
+//	printf("demodulated_que->front()->size() = %d\n", demodulated_que->size());
+
 	if ((int) datasocket->rcv_que->size() > 2) {
 #if IGNOREMUTEX == 1
 		pthread_mutex_lock(&demodquelock);
 #endif
 		mp3buffsize = lame_encode_buffer_ieee_float(lame, (float*) demodulated_que->front().buffer,
-				(float *) demodulated_que->front().buffer, (int) (demodulated_que->front().length) / sizeof(float),
-				mp3buffer, 10240);
+				(float *) demodulated_que->front().buffer, (int) (demodulated_que->front().length), mp3buffer, 10240);
 
 //		printf("Writing %d bytes to mp3\n", int(datasocket->rcv_que->front().revlength / sizeof(float)));
 #if IGNOREMUTEX == 1
 		pthread_mutex_unlock(&demodquelock);
 #endif
-		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
+
+//		printf("demodulated_que->front()->size() = %d\n", demodulated_que->size());
+//		fwrite(demodulated_que->front().buffer, 1, demodulated_que->front().length,
+//				demodulated);
+//		printf("demodulated_que->front().length = %d\n", demodulated_que->front().length);
+//		fwrite(mp3buffer, 1, mp3buffsize, mp3file);
 	}
 
 //only pop off if the audio flag = false, otherwise the play audio function will pop
 #if IGNOREMUTEX == 1
 	pthread_mutex_lock(&audiolock);
-	pthread_mutex_lock(&datasocket->queuelock);
+//	pthread_mutex_lock(&datasocket->queuelock);
 #endif
 	if (Getaudioflag() == false) {
+//pop if the audio is not playing, if audio playing pop will occur there
 		demodulated_que->pop();
-		printf("demod que popped in mp3 thread\n");
 	}
 #if IGNOREMUTEX == 1
-	pthread_mutex_unlock(&datasocket->queuelock);
+//	pthread_mutex_unlock(&datasocket->queuelock);
 	pthread_mutex_unlock(&audiolock);
 #endif
 
@@ -854,30 +877,37 @@ void MainWindow::audio_init() {
 void MainWindow::audio_play_dsp() {
 	int error;
 
-	if (demodbufferflagset == true) {
+//	if (demodbufferflagset == true) {
 
 //		printf("dsp queue = %d\n", (int) demodulated_que->size());
 //		printf("audio length = %d\n", demodulated_que->front().length);
 
 #if IGNOREMUTEX == 1
-		pthread_mutex_lock(&demodquelock);
+	pthread_mutex_lock(&demodquelock);
 #endif
-		if ((int) demodulated_que->size() > 1) {
-			if (pa_simple_write(pulsestruct, (void*) demodulated_que->front().buffer,
-					(size_t) demodulated_que->front().length, &error) < 0) {
-				fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
-			}
-			//pop the data off, the mp3 recording only will pop if play audioflag = false
-			demodulated_que->pop();
-			printf("demod que popped in audio thread\n");
-		} else {
-			//do nothing and let the buffer grow til its size is the min size
+	if ((int) demodulated_que->size() > 2) {
+		if (pa_simple_write(pulsestruct, (void*) demodulated_que->front().buffer,
+				(size_t) demodulated_que->front().length * sizeof(float), &error) < 0) {
+			fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
 		}
 
-#if IGNOREMUTEX == 1
-		pthread_mutex_unlock(&demodquelock);
-#endif
+//		printf("demodulated_que->front()->size() = %d\n", demodulated_que->size());
+//		fwrite(demodulated_que->front().buffer, 1, demodulated_que->front().length, demodulated);
+//		printf("demodulated_que->front().length = %d\n", demodulated_que->front().length);
+
+//pop the data off, the mp3 recording only will pop if play audioflag = false
+//		printf("pre-pop dsp queue = %d\n", (int) demodulated_que->size());
+		demodulated_que->pop();
+//		printf("post-pop dsp queue = %d\n", (int) demodulated_que->size());
+//			printf("demod que popped in audio thread\n");
+	} else {
+//do nothing and let the buffer grow til its size is the min size
 	}
+
+#if IGNOREMUTEX == 1
+	pthread_mutex_unlock(&demodquelock);
+#endif
+//	}
 }
 #endif
 
@@ -895,11 +925,11 @@ void MainWindow::audio_play() {
 				(size_t) datasocket->rcv_que->front().revlength, &error) < 0) {
 			fprintf(stderr, __FILE__": pa_simple_write() failed: %s\n", pa_strerror(error));
 		}
-		//pop the data off, the mp3 recording only will pop if play audioflag = false
+//pop the data off, the mp3 recording only will pop if play audioflag = false
 		datasocket->rcv_que->pop();
 
 	} else {
-		//do nothing and let the buffer grow til its size is the min size
+//do nothing and let the buffer grow til its size is the min size
 
 	}
 #if IGNOREMUTEX == 1
